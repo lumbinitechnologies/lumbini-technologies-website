@@ -54,6 +54,7 @@
   overflow: hidden;
   transition: all 0.3s ease;
   border: 0.5px solid rgba(255, 255, 255, 0.1);
+  position: relative;
 }
 
 .product-card:hover {
@@ -61,6 +62,21 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   border-color: yellow;
 }
+
+.product-card::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: conic-gradient(from 0deg, rgba(250, 204, 21, 0.0), rgba(250, 204, 21, 0.35), rgba(255,255,255,0.12), rgba(250, 204, 21, 0.35), rgba(250, 204, 21, 0.0));
+  filter: blur(12px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+
+.product-card:hover::before { opacity: 1; animation: cardGlowSpin 5s linear infinite; }
+.product-card > * { position: relative; z-index: 1; }
 
 /* Product Image */
 .product-image {

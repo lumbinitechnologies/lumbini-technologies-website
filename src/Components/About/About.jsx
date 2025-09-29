@@ -21,7 +21,7 @@ const About = () => {
       transition={{ duration: 0.5 }}
     >
       {/* Company Overview */}
-      <section className="about-intro">
+      <section className="about-intro" id="overview">
         <h1></h1>
         <p>
           At Lumbini Technologies, we are more than a tech company, we are architects of digital transformation. We specialize in cutting-edge web, mobile, and AI-driven applications that empower businesses to scale, innovate, and lead in a fast-changing world.
@@ -45,7 +45,7 @@ Our strength lies in our passionate team and a forward-thinking mindset. Togethe
       </section>
 
       {/* Our Members Section */}
-<section className="our-members">
+<section className="our-members" id="members">
   <h2>Our Members</h2>
   <div className="member-cards">
     <div className="member-card">
@@ -79,7 +79,7 @@ Our strength lies in our passionate team and a forward-thinking mindset. Togethe
 
 
       {/* Testimonials Section */}
-     <section className="testimonials">
+     <section className="testimonials" id="clients">
   <h2>Our Clients</h2>
   <div className="testimonial-cards">
     <div className="testimonial">

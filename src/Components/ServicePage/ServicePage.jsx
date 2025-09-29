@@ -2,6 +2,7 @@
 import React from 'react';
 import './ServicePage.css';
 import { motion } from 'framer-motion';
+import '../Home/Home.css';
 
 const services = [
   {
@@ -63,7 +64,7 @@ const ServicePage = () => {
         {services.map((service, index) => (
           <motion.div
             key={index}
-            className="service-card"
+            className="service-card card"
             variants={cardVariants}
             transition={{ duration: 0.5, ease: 'easeOut' }}
           >

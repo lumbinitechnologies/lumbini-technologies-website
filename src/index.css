@@ -11,6 +11,109 @@ html, body {
   background-color: #000; /* Prevent white flash on mobile paint */
   overscroll-behavior: none; /* Avoid overscroll glow */
 }
+/* Intro zoom overlay */
+/* Loader LT */
+.loader-lt-wrap {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.92), rgba(0,0,0,0.98));
+  z-index: 3000;
+}
+
+.loader-lt {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  filter: drop-shadow(0 0 12px rgba(250,204,21,0.25));
+}
+
+.loader-lt .lt-l,
+.loader-lt .lt-t {
+  position: absolute;
+  background: linear-gradient(180deg, #ffffff, #facc15);
+  border-radius: 6px;
+}
+
+/* L shape */
+.loader-lt .lt-l {
+  left: 10px;
+  top: 10px;
+  width: 16px;
+  height: 100px;
+  animation: ltPulse 1.2s ease-in-out infinite;
+}
+.loader-lt .lt-l::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 70px;
+  height: 16px;
+  background: inherit;
+  border-radius: 6px;
+}
+
+/* T shape */
+.loader-lt .lt-t {
+  right: 10px;
+  top: 10px;
+  width: 90px;
+  height: 16px;
+  animation: ltPulse 1.2s ease-in-out infinite 0.2s;
+}
+.loader-lt .lt-t::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 90px;
+  background: inherit;
+  border-radius: 6px;
+}
+
+.loader-lt-text {
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+@keyframes ltPulse {
+  0%, 100% { filter: brightness(1); transform: scale(1); }
+  50% { filter: brightness(1.3); transform: scale(1.03); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-lt .lt-l, .loader-lt .lt-t { animation: none; }
+}
+.intro-zoom-wrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: transparent; /* let site background show through transparent areas */
+  z-index: 2; /* ensure above background effects but below navbar (navbar hidden during intro) */
+}
+
+.intro-zoom-bg {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-color: transparent; /* ensure no fill behind image */
+  will-change: background-size;
+}
 
 body {
   background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
@@ -39,5 +142,58 @@ a {
 @media (max-width: 1024px) {
   body {
     background-attachment: scroll; /* Ensure no fixed backgrounds on mobile */
+  }
+}
+
+/* Mouse follower glow - hidden on small screens */
+.cursor-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 320px;
+  height: 320px;
+  margin-left: -160px; /* center on cursor */
+  margin-top: -160px;  /* center on cursor */
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(250, 204, 21, 0.25), rgba(250, 204, 21, 0) 70%);
+  filter: blur(20px);
+  mix-blend-mode: screen;
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .cursor-glow { display: none; }
+}
+
+/* Custom cursor visuals (desktop only) */
+@media (min-width: 769px) {
+  body {
+    cursor: none; /* hide system cursor on desktop only */
+  }
+  .cursor-dot {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ffffff;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 10000;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    filter: blur(0.2px);
+  }
+  a, button, .card, .dropdown-trigger {
+    cursor: none;
   }
 }

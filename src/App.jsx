@@ -22,6 +22,11 @@ import Login from './Components/Login/Login';
 import InternshipApplication from './Components/InternshipApplication/InternshipApplication';
 import SkillArc from './Components/SkillArc/SkillArc'; // skillarc (donot touch)
 import Admin from './Components/Admin/Admin';
+import MouseFollower from './Components/Effects/MouseFollower';
+import MouseParallax from './Components/Effects/MouseParallax';
+import CustomCursor from './Components/Effects/CustomCursor';
+import LoaderLT from './Components/Effects/LoaderLT';
+// Intro zoom overlay is now handled inside Home page only
 
 const Products = lazy(() => import('./Components/Products/Products'));
 
@@ -83,9 +88,24 @@ const AnimatedRoutes = () => {
 
 // Main App Component
 const App = () => {
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const t = setTimeout(() => setFadeOut(true), 3000); // start fade-out at 3s
+    const t2 = setTimeout(() => setLoading(false), 3500); // fully remove at 3.5s
+    return () => {
+      clearTimeout(t);
+      clearTimeout(t2);
+    };
+  }, []);
+
   return (
     <Router>
       <ScrollToTop />
+      {loading && <LoaderLT />}
+      <MouseFollower />
+      <MouseParallax />
+      <CustomCursor />
       <Navbar />
       <AnimatedRoutes />
       <Footer />   {/* ✅ Added Footer globally */}

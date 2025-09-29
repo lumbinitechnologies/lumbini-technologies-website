@@ -32,30 +32,30 @@ const ScrollingTextBanner = () => {
     return content;
   };
 
-  return (
-    <div className="scrolling-text-banner">
-      <div className="banner-text-wrapper">
-        <motion.div
-          className="banner-text"
-          animate={{ x: [0, -3500] }}
-          transition={{
-            duration: 45,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-        >
-          {scrollingTextSegments()}
-        </motion.div>
-      </div>
+  // return (
+  //   <div className="scrolling-text-banner">
+  //     {/* <div className="banner-text-wrapper">
+  //       <motion.div
+  //         className="banner-text"
+  //         animate={{ x: [0, -3500] }}
+  //         transition={{
+  //           duration: 45,
+  //           repeat: Infinity,
+  //           ease: "linear"
+  //         }}
+  //       >
+  //         {scrollingTextSegments()}
+  //       </motion.div>
+  //     </div>
 
-      <button
-        className="apply-now-btn-inline"
-        onClick={handleApplyClick}
-      >
-        Apply Now
-      </button>
-    </div>
-  );
+  //     <button
+  //       className="apply-now-btn-inline"
+  //       onClick={handleApplyClick}
+  //     >
+  //       Apply Now
+  //     </button> */}
+  //   </div>
+  // );
 };
 
 export default ScrollingTextBanner;

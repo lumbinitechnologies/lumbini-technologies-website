@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import './Home.css';
+import IntroZoomOverlay from '../Effects/IntroZoomOverlay';
+import heroImage from '../../assets/front-bg.png';
 
 const Home = () => {
   // Services data for cards
@@ -73,13 +75,21 @@ const Home = () => {
     visible: { opacity: 1, y: 0 },
   };
 
-  // Close menu when route changes
+  const [showIntro, setShowIntro] = useState(false);
+
+  // Show intro once per full page load; not when navigating back to Home within SPA
   useEffect(() => {
-    // Any home-specific effects can go here
+    if (!window.__introShown) {
+      setShowIntro(true);
+      window.__introShown = true;
+    }
   }, []);
 
   return (
     <div className="home-container">
+      {showIntro && (
+        <IntroZoomOverlay src={heroImage} alt="Lumbini Technologies" />
+      )}
       {/* Scrolling Banner */}
       <div className="scrolling-text-banner">
         <div className="banner-text-wrapper">

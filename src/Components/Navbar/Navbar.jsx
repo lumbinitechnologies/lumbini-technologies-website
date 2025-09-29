@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown } from 'lucide-react';
 import './Navbar.css';
+import LogoSprinkles from '../Effects/LogoSprinkles';
 
 const Navbar = () => {
   const location = useLocation();
   const [isSticky, setIsSticky] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   // Toggle sticky navbar on scroll
   const handleScroll = () => {
@@ -26,12 +26,12 @@ const Navbar = () => {
   // Close menu when a nav link is clicked
   const closeMenu = () => {
     setMenuOpen(false);
+    setAboutOpen(false);
   };
 
   // Close menu when route changes
   useEffect(() => {
     closeMenu();
-    setAboutDropdownOpen(false);
   }, [location]);
 
   // Handle scroll event for sticky navbar
@@ -40,9 +40,17 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Close About dropdown when route changes
+  useEffect(() => {
+    setAboutOpen(false);
+  }, [location]);
+
   return (
     <header className={`header ${isSticky ? 'sticky' : ''}`}>
-      <Link to="/" className="logo" onClick={closeMenu}>Lumbini Technologies</Link>
+      <div className="logo-wrap">
+        <Link to="/" className="logo" onClick={closeMenu}>Lumbini Technologies</Link>
+        <LogoSprinkles />
+      </div>
 
       <div 
         className={`menu-toggle ${menuOpen ? 'active' : ''}`} 
@@ -55,24 +63,30 @@ const Navbar = () => {
 
       <nav className={`navbar ${menuOpen ? 'show' : ''}`}>
         <Link to="/" className={location.pathname === '/' ? 'active' : ''} onClick={closeMenu}>Home</Link>
-        
-        <div className="dropdown-container">
-          <button 
-            className={`dropdown-trigger ${location.pathname === '/About' || location.pathname === '/Gallery' ? 'active' : ''}`}
-            onClick={() => setAboutDropdownOpen(!aboutDropdownOpen)}
+
+        <div 
+          className="dropdown-container"
+          onMouseEnter={() => setAboutOpen(true)}
+          onMouseLeave={() => setAboutOpen(false)}
+        >
+          <button
+            type="button"
+            className={`dropdown-trigger ${location.pathname === '/About' ? 'active' : ''}`}
+            aria-haspopup="true"
+            aria-expanded={aboutOpen}
+            onClick={() => setAboutOpen(prev => !prev)}
           >
             About Us
-            <ChevronDown className={`dropdown-icon ${aboutDropdownOpen ? 'open' : ''}`} />
+            <span className={`dropdown-icon ${aboutOpen ? 'open' : ''}`}>▾</span>
           </button>
-          <div className={`dropdown-menu ${aboutDropdownOpen ? 'show' : ''}`}>
-            <Link to="/About" onClick={closeMenu}>About Us</Link>
-            <Link to="/Gallery" onClick={closeMenu}>Gallery</Link>
+          <div className={`dropdown-menu ${aboutOpen ? 'show' : ''}`} role="menu">
+            <Link to="/About" onClick={closeMenu} role="menuitem">About Us</Link>
+            <Link to="/Gallery" onClick={closeMenu} role="menuitem">Gallery</Link>
           </div>
         </div>
-        
         <Link to="/ServicePage" className={location.pathname === '/ServicePage' ? 'active' : ''} onClick={closeMenu}>Services</Link>
+        <Link to="/Career" className={location.pathname === '/Career' ? 'active' : ''} onClick={closeMenu}>Careers</Link>
         <Link to="/Products" className={location.pathname === '/Products' ? 'active' : ''} onClick={closeMenu}>Products</Link>
-        <Link to="/Career" className={location.pathname === '/Career' ? 'active' : ''} onClick={closeMenu}>Career</Link>
         <Link to="/Contact" className={location.pathname === '/Contact' ? 'active' : ''} onClick={closeMenu}>Contact</Link>
         <Link to="/Login" className={location.pathname === '/Login' ? 'active' : ''} onClick={closeMenu}>Login</Link>
       </nav>
