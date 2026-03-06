@@ -1,74 +1,60 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../services/supabase";
-
-// ✅ No fetchIsAdmin import — querying admins table directly
 
 const AdminRoute = ({ children }) => {
   const navigate = useNavigate();
-  const [checking, setChecking] = useState(true);
+  const { session, user, loading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminLoading, setAdminLoading] = useState(true);
 
   useEffect(() => {
     const checkAdmin = async () => {
+      if (!session) {
+        navigate("/Login", { replace: true });
+        return;
+      }
+
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const user = sessionData?.session?.user ?? null;
-
-        console.log("[AdminRoute] Logged in as:", user?.email);
-
-        if (!user) {
-          console.log("[AdminRoute] No user, redirecting to login");
-          navigate("/Login?redirect=/admin-dashboard", { replace: true });
-          return;
-        }
-
-        // ✅ Direct query — no external service needed
         const { data, error } = await supabase
           .from("admins")
           .select("id")
-          .eq("email", user.email)
+          .eq("email", user?.email)
           .maybeSingle();
 
-        console.log("[AdminRoute] Admin check:", { data, error });
-
+        if (error) throw error;
+        
         if (!data) {
-          console.log("[AdminRoute] Not an admin, redirecting home");
-          navigate("/", { replace: true });
+          navigate("/dashboard", { replace: true });
           return;
         }
 
-        console.log("[AdminRoute] Admin confirmed ✓");
         setIsAdmin(true);
       } catch (err) {
-        console.error("[AdminRoute] Unexpected error:", err);
-        navigate("/", { replace: true });
+        console.error("Admin check failed:", err);
+        navigate("/dashboard", { replace: true });
       } finally {
-        setChecking(false);
+        setAdminLoading(false);
       }
     };
 
-    checkAdmin();
-  }, [navigate]);
+    if (!loading) {
+      checkAdmin();
+    }
+  }, [session, user, loading, navigate]);
 
-  if (checking) {
+  if (loading || adminLoading) {
     return (
-      <div
-        style={{
-          color: "#facc15",
-          textAlign: "center",
-          padding: "4rem",
-          background: "#000",
-          minHeight: "100vh",
-          fontFamily: "monospace",
-        }}
-      >
-        Verifying admin access...
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", color: "white" }}>
+        Initializing dashboard...
       </div>
     );
   }
 
-  if (!isAdmin) return null;
+  if (!isAdmin) {
+    return null;
+  }
 
   return children;
 };
