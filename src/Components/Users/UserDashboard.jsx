@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../services/supabase";
 import { useNavigate } from "react-router-dom";
-import useAuthGuard from "../hooks/useAuthGuard";
+import { useAuth } from "../../context/AuthContext";
 
 const STATUS_CONFIG = {
   pending: {
@@ -57,7 +57,8 @@ const DOC_META = {
 
 const UserDashboard = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuthGuard();
+  // ── Use your existing AuthContext instead of useAuthGuard ──────────────────
+  const { session, user, loading: authLoading } = useAuth();
 
   const [applications, setApplications] = useState([]);
   const [appsLoading, setAppsLoading] = useState(true);
@@ -67,8 +68,14 @@ const UserDashboard = () => {
   const [documents, setDocuments] = useState([]);
   const [docsLoading, setDocsLoading] = useState(false);
 
-  // Active nav tab: "applications" | "documents"
   const [activeTab, setActiveTab] = useState("applications");
+
+  // ── Auth guard (mirrors your original useEffect) ───────────────────────────
+  useEffect(() => {
+    if (!authLoading && !session) {
+      navigate("/Login?redirect=/dashboard", { replace: true });
+    }
+  }, [session, authLoading, navigate]);
 
   useEffect(() => {
     if (!user) return;
@@ -109,7 +116,6 @@ const UserDashboard = () => {
     if (!user) return;
     setDocsLoading(true);
     try {
-      // Find intern record by email
       const { data: intern } = await supabase
         .from("interns")
         .select("id")
@@ -153,6 +159,27 @@ const UserDashboard = () => {
   const latestStatus = applications[0]?.status || null;
   const latestS = STATUS_CONFIG[latestStatus] || null;
   const loading = authLoading || appsLoading;
+
+  // ── Early returns (mirrors your original) ─────────────────────────────────
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          color: "#facc15",
+          fontFamily: "'DM Mono', monospace",
+          fontSize: 13,
+        }}
+      >
+        Initializing dashboard...
+      </div>
+    );
+  }
+
+  if (!session) return null;
 
   return (
     <>
@@ -243,10 +270,8 @@ const UserDashboard = () => {
           background: rgba(96,165,250,0.15);
           color: #60a5fa;
           font-family: 'DM Mono', monospace;
-          font-size: 10px;
-          font-weight: 700;
-          padding: 2px 7px;
-          border-radius: 999px;
+          font-size: 10px; font-weight: 700;
+          padding: 2px 7px; border-radius: 999px;
           border: 1px solid rgba(96,165,250,0.25);
         }
 
@@ -319,7 +344,6 @@ const UserDashboard = () => {
         }
         .ud-section-title::after { content: ''; flex: 1; height: 1px; background: #111827; }
 
-        /* ── Application cards ── */
         .ud-app-card {
           background: #0a0d14; border: 1px solid #111827;
           border-radius: 14px; padding: 20px 22px;
@@ -338,7 +362,6 @@ const UserDashboard = () => {
         .ud-app-card-skills { font-size: 12px; color: #334155; font-family: 'DM Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 8px; }
         .ud-app-card-date { font-size: 12px; color: #1e2d3d; font-family: 'DM Mono', monospace; margin-top: 6px; }
 
-        /* ── Application detail ── */
         .ud-detail { background: #0a0d14; border: 1px solid #111827; border-radius: 16px; padding: 24px; }
         .ud-detail-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 12px; flex-wrap: wrap; }
         .ud-detail-title { font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
@@ -360,73 +383,34 @@ const UserDashboard = () => {
         }
         .ud-resume-btn:hover { background: rgba(250,204,21,0.15); border-color: #facc15; }
 
-        /* ── Documents section ── */
-        .ud-docs-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-          gap: 14px;
-        }
-
+        .ud-docs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
         .ud-doc-card {
-          background: #0a0d14;
-          border: 1px solid var(--doc-border);
-          border-radius: 14px;
-          padding: 20px;
-          position: relative;
-          overflow: hidden;
+          background: #0a0d14; border: 1px solid var(--doc-border);
+          border-radius: 14px; padding: 20px;
+          position: relative; overflow: hidden;
           transition: border-color 0.2s, background 0.2s;
         }
         .ud-doc-card::before {
-          content: '';
-          position: absolute; left: 0; top: 0; bottom: 0;
-          width: 3px; background: var(--doc-color);
-          border-radius: 0 2px 2px 0;
+          content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+          width: 3px; background: var(--doc-color); border-radius: 0 2px 2px 0;
         }
         .ud-doc-card:hover { background: #0d1118; }
-
-        .ud-doc-icon {
-          width: 44px; height: 44px; border-radius: 12px;
-          background: var(--doc-bg);
-          display: flex; align-items: center; justify-content: center;
-          font-size: 20px; margin-bottom: 14px;
-        }
-
-        .ud-doc-label {
-          font-size: 14px; font-weight: 700; color: #e2e8f0; margin-bottom: 4px;
-        }
-
-        .ud-doc-date {
-          font-size: 11px; font-family: 'DM Mono', monospace;
-          color: #334155; margin-bottom: 14px;
-        }
-
+        .ud-doc-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--doc-bg); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 14px; }
+        .ud-doc-label { font-size: 14px; font-weight: 700; color: #e2e8f0; margin-bottom: 4px; }
+        .ud-doc-date { font-size: 11px; font-family: 'DM Mono', monospace; color: #334155; margin-bottom: 14px; }
         .ud-doc-download {
           display: inline-flex; align-items: center; gap: 6px;
-          padding: 7px 14px;
-          background: var(--doc-bg);
-          border: 1px solid var(--doc-border);
-          border-radius: 7px;
-          color: var(--doc-color);
-          font-size: 12px; font-weight: 600;
-          font-family: 'DM Mono', monospace;
-          text-decoration: none;
-          transition: all 0.2s;
+          padding: 7px 14px; background: var(--doc-bg); border: 1px solid var(--doc-border);
+          border-radius: 7px; color: var(--doc-color);
+          font-size: 12px; font-weight: 600; font-family: 'DM Mono', monospace;
+          text-decoration: none; transition: all 0.2s;
         }
-        .ud-doc-download:hover {
-          filter: brightness(1.2);
-        }
+        .ud-doc-download:hover { filter: brightness(1.2); }
 
-        .ud-docs-empty {
-          background: #0a0d14;
-          border: 1px dashed #111827;
-          border-radius: 14px;
-          padding: 36px 24px;
-          text-align: center;
-        }
+        .ud-docs-empty { background: #0a0d14; border: 1px dashed #111827; border-radius: 14px; padding: 36px 24px; text-align: center; }
         .ud-docs-empty-icon { font-size: 2rem; opacity: 0.2; margin-bottom: 10px; }
         .ud-docs-empty-text { font-family: 'DM Mono', monospace; font-size: 12px; color: #1e2d3d; }
 
-        /* ── Timeline ── */
         .ud-timeline { display: flex; align-items: center; gap: 0; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px; }
         .ud-tl-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 60px; position: relative; }
         .ud-tl-step:not(:last-child)::after {
@@ -442,13 +426,9 @@ const UserDashboard = () => {
         }
         .ud-tl-label { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--tl-label-color, #1e2d3d); margin-top: 6px; text-align: center; text-transform: uppercase; letter-spacing: 0.05em; }
 
-        /* ── Misc ── */
         .ud-empty { background: #0a0d14; border: 1px dashed #111827; border-radius: 16px; padding: 48px 24px; text-align: center; }
         .ud-empty-icon { font-size: 2.5rem; opacity: 0.2; margin-bottom: 12px; }
         .ud-empty-text { font-family: 'DM Mono', monospace; font-size: 13px; color: #1e2d3d; margin-bottom: 20px; }
-
-        .ud-loading { display: flex; align-items: center; justify-content: center; min-height: 60vh; font-family: 'DM Mono', monospace; font-size: 13px; color: #facc15; animation: flicker 1.2s infinite; }
-        @keyframes flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
         @media (max-width: 900px) {
           .ud-grid { grid-template-columns: 1fr; }
@@ -460,451 +440,290 @@ const UserDashboard = () => {
         }
       `}</style>
 
-      {loading ? (
-        <div className="ud-loading">Initializing dashboard...</div>
-      ) : (
-        <div className="ud">
-          <div className="ud-grid">
-            {/* ── Sidebar ── */}
-            <aside className="ud-sidebar">
-              <div className="ud-profile-card">
-                <div className="ud-avatar">{avatarLetter}</div>
-                <div className="ud-profile-name">
-                  {applications[0]?.name ||
-                    user?.email?.split("@")[0] ||
-                    "User"}
-                </div>
-                <div className="ud-profile-email">{user?.email}</div>
-                <div className="ud-profile-divider" />
-                <div className="ud-profile-stat">
-                  <span className="ud-profile-stat-label">Applications</span>
-                  <span className="ud-profile-stat-val">
-                    {applications.length}
-                  </span>
-                </div>
-                <div className="ud-profile-stat">
-                  <span className="ud-profile-stat-label">Documents</span>
-                  <span
-                    className="ud-profile-stat-val"
-                    style={{ color: "#60a5fa" }}
-                  >
-                    {documents.length}
-                  </span>
-                </div>
-                <div className="ud-profile-stat">
-                  <span className="ud-profile-stat-label">Latest Status</span>
-                  <span
-                    className="ud-profile-stat-val"
-                    style={{ color: latestS?.color || "#334155" }}
-                  >
-                    {latestS?.label || "—"}
-                  </span>
-                </div>
-                <div className="ud-profile-stat">
-                  <span className="ud-profile-stat-label">Member Since</span>
-                  <span className="ud-profile-stat-val">
-                    {fmt(user?.created_at)}
-                  </span>
-                </div>
+      <div className="ud">
+        <div className="ud-grid">
+
+          {/* ── Sidebar ── */}
+          <aside className="ud-sidebar">
+            <div className="ud-profile-card">
+              <div className="ud-avatar">{avatarLetter}</div>
+              <div className="ud-profile-name">
+                {applications[0]?.name || user?.email?.split("@")[0] || "User"}
               </div>
-
-              <div className="ud-nav">
-                <button
-                  className={
-                    "ud-nav-item" +
-                    (activeTab === "applications" ? " active" : "")
-                  }
-                  onClick={() => setActiveTab("applications")}
-                >
-                  <span>📋</span>
-                  My Applications
-                </button>
-                <button
-                  className={
-                    "ud-nav-item" + (activeTab === "documents" ? " active" : "")
-                  }
-                  onClick={() => setActiveTab("documents")}
-                >
-                  <span>📁</span>
-                  My Documents
-                  {documents.length > 0 && (
-                    <span className="ud-nav-badge">{documents.length}</span>
-                  )}
-                </button>
-                <button
-                  className="ud-nav-item"
-                  onClick={() => navigate("/Career")}
-                >
-                  <span>🎯</span>
-                  Browse Internships
-                </button>
-                <button className="ud-nav-item" onClick={() => navigate("/")}>
-                  <span>🏠</span>
-                  Home
-                </button>
-                <button className="ud-logout-btn" onClick={handleLogout}>
-                  <span>↩</span>
-                  Logout
-                </button>
+              <div className="ud-profile-email">{user?.email}</div>
+              <div className="ud-profile-divider" />
+              <div className="ud-profile-stat">
+                <span className="ud-profile-stat-label">Applications</span>
+                <span className="ud-profile-stat-val">{applications.length}</span>
               </div>
-            </aside>
+              <div className="ud-profile-stat">
+                <span className="ud-profile-stat-label">Documents</span>
+                <span className="ud-profile-stat-val" style={{ color: "#60a5fa" }}>
+                  {documents.length}
+                </span>
+              </div>
+              <div className="ud-profile-stat">
+                <span className="ud-profile-stat-label">Latest Status</span>
+                <span className="ud-profile-stat-val" style={{ color: latestS?.color || "#334155" }}>
+                  {latestS?.label || "—"}
+                </span>
+              </div>
+              <div className="ud-profile-stat">
+                <span className="ud-profile-stat-label">Member Since</span>
+                <span className="ud-profile-stat-val">{fmt(user?.created_at)}</span>
+              </div>
+            </div>
 
-            {/* ── Main ── */}
-            <main className="ud-main">
-              {appsError && (
-                <div
-                  style={{
-                    background: "rgba(248,113,113,0.08)",
-                    border: "1px solid rgba(248,113,113,0.25)",
-                    borderRadius: 14,
-                    padding: "14px 16px",
-                    color: "#fca5a5",
-                    fontFamily: "'DM Mono', monospace",
-                    fontSize: 12,
-                  }}
-                >
-                  // could not load dashboard data
-                  <div style={{ marginTop: 8, color: "#f87171" }}>
-                    {appsError}
-                  </div>
-                </div>
-              )}
-
-              {/* Welcome */}
-              <div className="ud-welcome">
-                <div>
-                  <div className="ud-welcome-greeting">// welcome back</div>
-                  <div className="ud-welcome-title">
-                    Hello,{" "}
-                    {applications[0]?.name?.split(" ")[0] ||
-                      user?.email?.split("@")[0]}{" "}
-                    👋
-                  </div>
-                  <div className="ud-welcome-sub">
-                    {applications.length === 0
-                      ? "You haven't applied for any internship yet."
-                      : `You have ${applications.length} application${applications.length > 1 ? "s" : ""} on record.`}
-                  </div>
-                </div>
-                {applications.length === 0 && (
-                  <button
-                    className="ud-apply-btn"
-                    onClick={() => navigate("/Career")}
-                  >
-                    Apply Now →
-                  </button>
+            <div className="ud-nav">
+              <button
+                className={"ud-nav-item" + (activeTab === "applications" ? " active" : "")}
+                onClick={() => setActiveTab("applications")}
+              >
+                <span>📋</span> My Applications
+              </button>
+              <button
+                className={"ud-nav-item" + (activeTab === "documents" ? " active" : "")}
+                onClick={() => setActiveTab("documents")}
+              >
+                <span>📁</span> My Documents
+                {documents.length > 0 && (
+                  <span className="ud-nav-badge">{documents.length}</span>
                 )}
+              </button>
+              <button className="ud-nav-item" onClick={() => navigate("/Career")}>
+                <span>🎯</span> Browse Internships
+              </button>
+              <button className="ud-nav-item" onClick={() => navigate("/")}>
+                <span>🏠</span> Home
+              </button>
+              <button className="ud-logout-btn" onClick={handleLogout}>
+                <span>↩</span> Logout
+              </button>
+            </div>
+          </aside>
+
+          {/* ── Main ── */}
+          <main className="ud-main">
+            {appsError && (
+              <div style={{
+                background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)",
+                borderRadius: 14, padding: "14px 16px", color: "#fca5a5",
+                fontFamily: "'DM Mono', monospace", fontSize: 12,
+              }}>
+                // could not load dashboard data
+                <div style={{ marginTop: 8, color: "#f87171" }}>{appsError}</div>
               </div>
+            )}
 
-              {/* Status banner */}
-              {latestS && (
-                <div
-                  className="ud-status-banner"
-                  style={{
-                    "--color": latestS.color,
-                    "--color-dim": latestS.bg,
-                    "--glow": latestS.glow,
-                  }}
-                >
-                  <div className="ud-status-icon">
-                    {latestStatus === "pending" && "⏳"}
-                    {latestStatus === "shortlisted" && "⭐"}
-                    {latestStatus === "selected" && "🎉"}
-                    {latestStatus === "rejected" && "📩"}
-                  </div>
-                  <div>
-                    <div className="ud-status-banner-label">
-                      Latest Application Status
-                    </div>
-                    <div className="ud-status-banner-msg">
-                      {STATUS_MESSAGES[latestStatus]}
-                    </div>
-                  </div>
-                  <span
-                    className="ud-status-dot-badge"
-                    style={{ "--sbg": latestS.bg, "--sc": latestS.color }}
-                  >
-                    <span className="ud-dot" />
-                    {latestS.label}
-                  </span>
+            {/* Welcome */}
+            <div className="ud-welcome">
+              <div>
+                <div className="ud-welcome-greeting">// welcome back</div>
+                <div className="ud-welcome-title">
+                  Hello, {applications[0]?.name?.split(" ")[0] || user?.email?.split("@")[0]} 👋
                 </div>
+                <div className="ud-welcome-sub">
+                  {applications.length === 0
+                    ? "You haven't applied for any internship yet."
+                    : `You have ${applications.length} application${applications.length > 1 ? "s" : ""} on record.`}
+                </div>
+              </div>
+              {applications.length === 0 && (
+                <button className="ud-apply-btn" onClick={() => navigate("/Career")}>
+                  Apply Now →
+                </button>
               )}
+            </div>
 
-              {/* ══════════════ APPLICATIONS TAB ══════════════ */}
-              {activeTab === "applications" && (
-                <>
-                  {applications.length === 0 ? (
-                    <div className="ud-empty">
-                      <div className="ud-empty-icon">📄</div>
-                      <div className="ud-empty-text">
-                        // no applications found
-                      </div>
-                      <button
-                        className="ud-apply-btn"
-                        onClick={() => navigate("/Career")}
-                      >
-                        Browse Internships
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <div>
-                        <div className="ud-section-title">Applications</div>
-                        {applications.map((app) => {
-                          const s =
-                            STATUS_CONFIG[app.status] || STATUS_CONFIG.pending;
-                          return (
-                            <div
-                              key={app.id}
-                              className={
-                                "ud-app-card" +
-                                (activeApp?.id === app.id ? " active-card" : "")
-                              }
-                              style={{
-                                "--accent": s.color,
-                                "--accent-dim": s.bg,
-                              }}
-                              onClick={() => setActiveApp(app)}
-                            >
-                              <div className="ud-app-card-top">
-                                <div>
-                                  <div className="ud-app-card-university">
-                                    {app.university || "—"}
-                                  </div>
-                                  <div className="ud-app-card-name">
-                                    {app.name || "—"}
-                                  </div>
-                                </div>
-                                <span
-                                  className="ud-status-dot-badge"
-                                  style={{ "--sbg": s.bg, "--sc": s.color }}
-                                >
-                                  <span className="ud-dot" />
-                                  {s.label}
-                                </span>
-                              </div>
-                              {app.skills && (
-                                <div className="ud-app-card-skills">
-                                  {app.skills}
-                                </div>
-                              )}
-                              <div className="ud-app-card-date">
-                                Applied {fmt(app.created_at)}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {activeApp &&
-                        (() => {
-                          const s =
-                            STATUS_CONFIG[activeApp.status] ||
-                            STATUS_CONFIG.pending;
-                          return (
-                            <div className="ud-detail">
-                              <div className="ud-section-title">
-                                Application Details
-                              </div>
-
-                              {/* Timeline */}
-                              <div className="ud-timeline">
-                                {["pending", "shortlisted", "selected"].map(
-                                  (step, i) => {
-                                    const steps = [
-                                      "pending",
-                                      "shortlisted",
-                                      "selected",
-                                    ];
-                                    const current = steps.indexOf(
-                                      activeApp.status,
-                                    );
-                                    const isDone =
-                                      activeApp.status === "rejected"
-                                        ? false
-                                        : i <= current;
-                                    return (
-                                      <div
-                                        key={step}
-                                        className="ud-tl-step"
-                                        style={{
-                                          "--dot-bg": isDone
-                                            ? s.color
-                                            : "#111827",
-                                          "--dot-border": isDone
-                                            ? s.color
-                                            : "#1f2937",
-                                          "--line-color":
-                                            isDone && i < current
-                                              ? s.color
-                                              : "#111827",
-                                          "--tl-label-color": isDone
-                                            ? s.color
-                                            : "#1e2d3d",
-                                        }}
-                                      >
-                                        <div className="ud-tl-dot">
-                                          {isDone ? "✓" : ""}
-                                        </div>
-                                        <div className="ud-tl-label">
-                                          {step === "pending"
-                                            ? "Applied"
-                                            : step}
-                                        </div>
-                                      </div>
-                                    );
-                                  },
-                                )}
-                              </div>
-
-                              <div className="ud-detail-header">
-                                <div>
-                                  <div className="ud-detail-title">
-                                    {activeApp.name}
-                                  </div>
-                                  <div className="ud-detail-sub">
-                                    {activeApp.email}
-                                  </div>
-                                </div>
-                                <span
-                                  className="ud-status-dot-badge"
-                                  style={{ "--sbg": s.bg, "--sc": s.color }}
-                                >
-                                  <span className="ud-dot" />
-                                  {s.label}
-                                </span>
-                              </div>
-
-                              <div className="ud-detail-grid">
-                                {[
-                                  ["University", activeApp.university],
-                                  ["Degree", activeApp.degree],
-                                  ["Year", activeApp.year],
-                                  ["Phone", activeApp.phone],
-                                  ["Skills", activeApp.skills],
-                                  ["Applied On", fmt(activeApp.created_at)],
-                                ].map(([label, val]) => (
-                                  <div key={label} className="ud-detail-field">
-                                    <div className="ud-detail-field-label">
-                                      {label}
-                                    </div>
-                                    <div className="ud-detail-field-val">
-                                      {val || "—"}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-
-                              {activeApp.motivation && (
-                                <div className="ud-detail-motivation">
-                                  <div className="ud-detail-motivation-label">
-                                    Why this internship?
-                                  </div>
-                                  <div className="ud-detail-motivation-text">
-                                    {activeApp.motivation}
-                                  </div>
-                                </div>
-                              )}
-
-                              {activeApp.resume_url && (
-                                <a
-                                  href={activeApp.resume_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="ud-resume-btn"
-                                >
-                                  ↗ View Resume (PDF)
-                                </a>
-                              )}
-                            </div>
-                          );
-                        })()}
-                    </>
-                  )}
-                </>
-              )}
-
-              {/* ══════════════ DOCUMENTS TAB ══════════════ */}
-              {activeTab === "documents" && (
+            {/* Status banner */}
+            {latestS && (
+              <div
+                className="ud-status-banner"
+                style={{ "--color": latestS.color, "--color-dim": latestS.bg, "--glow": latestS.glow }}
+              >
+                <div className="ud-status-icon">
+                  {latestStatus === "pending" && "⏳"}
+                  {latestStatus === "shortlisted" && "⭐"}
+                  {latestStatus === "selected" && "🎉"}
+                  {latestStatus === "rejected" && "📩"}
+                </div>
                 <div>
-                  <div className="ud-section-title">My Documents</div>
+                  <div className="ud-status-banner-label">Latest Application Status</div>
+                  <div className="ud-status-banner-msg">{STATUS_MESSAGES[latestStatus]}</div>
+                </div>
+                <span className="ud-status-dot-badge" style={{ "--sbg": latestS.bg, "--sc": latestS.color }}>
+                  <span className="ud-dot" />
+                  {latestS.label}
+                </span>
+              </div>
+            )}
 
-                  {docsLoading ? (
-                    <div
-                      style={{
-                        fontFamily: "'DM Mono', monospace",
-                        fontSize: 13,
-                        color: "#334155",
-                        padding: "24px 0",
-                      }}
-                    >
-                      Loading documents...
-                    </div>
-                  ) : documents.length === 0 ? (
-                    <div className="ud-docs-empty">
-                      <div className="ud-docs-empty-icon">📁</div>
-                      <div className="ud-docs-empty-text">
-                        // no documents available yet
-                        <br />
-                        <span
-                          style={{
-                            color: "#1a2535",
-                            display: "block",
-                            marginTop: 6,
-                          }}
-                        >
-                          Documents will appear here once the admin generates
-                          them for you.
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="ud-docs-grid">
-                      {documents.map((doc) => {
-                        const meta = DOC_META[doc.document_type] || {
-                          label:
-                            doc.document_type?.replace(/_/g, " ") || "Document",
-                          icon: "📄",
-                          color: "#94a3b8",
-                          bg: "rgba(148,163,184,0.08)",
-                          border: "rgba(148,163,184,0.2)",
-                        };
+            {/* ── APPLICATIONS TAB ── */}
+            {activeTab === "applications" && (
+              <>
+                {applications.length === 0 ? (
+                  <div className="ud-empty">
+                    <div className="ud-empty-icon">📄</div>
+                    <div className="ud-empty-text">// no applications found</div>
+                    <button className="ud-apply-btn" onClick={() => navigate("/Career")}>
+                      Browse Internships
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <div className="ud-section-title">Applications</div>
+                      {applications.map((app) => {
+                        const s = STATUS_CONFIG[app.status] || STATUS_CONFIG.pending;
                         return (
                           <div
-                            key={doc.id}
-                            className="ud-doc-card"
-                            style={{
-                              "--doc-color": meta.color,
-                              "--doc-bg": meta.bg,
-                              "--doc-border": meta.border,
-                            }}
+                            key={app.id}
+                            className={"ud-app-card" + (activeApp?.id === app.id ? " active-card" : "")}
+                            style={{ "--accent": s.color, "--accent-dim": s.bg }}
+                            onClick={() => setActiveApp(app)}
                           >
-                            <div className="ud-doc-icon">{meta.icon}</div>
-                            <div className="ud-doc-label">{meta.label}</div>
-                            <div className="ud-doc-date">
-                              {doc.created_at
-                                ? `Issued ${fmt(doc.created_at)}`
-                                : "Recently issued"}
+                            <div className="ud-app-card-top">
+                              <div>
+                                <div className="ud-app-card-university">{app.university || "—"}</div>
+                                <div className="ud-app-card-name">{app.name || "—"}</div>
+                              </div>
+                              <span className="ud-status-dot-badge" style={{ "--sbg": s.bg, "--sc": s.color }}>
+                                <span className="ud-dot" />{s.label}
+                              </span>
                             </div>
-                            <a
-                              href={doc.file_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="ud-doc-download"
-                            >
-                              ↗ View &amp; Download
-                            </a>
+                            {app.skills && <div className="ud-app-card-skills">{app.skills}</div>}
+                            <div className="ud-app-card-date">Applied {fmt(app.created_at)}</div>
                           </div>
                         );
                       })}
                     </div>
-                  )}
-                </div>
-              )}
-            </main>
-          </div>
+
+                    {activeApp && (() => {
+                      const s = STATUS_CONFIG[activeApp.status] || STATUS_CONFIG.pending;
+                      return (
+                        <div className="ud-detail">
+                          <div className="ud-section-title">Application Details</div>
+
+                          {/* Timeline */}
+                          <div className="ud-timeline">
+                            {["pending", "shortlisted", "selected"].map((step, i) => {
+                              const steps = ["pending", "shortlisted", "selected"];
+                              const current = steps.indexOf(activeApp.status);
+                              const isDone = activeApp.status === "rejected" ? false : i <= current;
+                              return (
+                                <div
+                                  key={step}
+                                  className="ud-tl-step"
+                                  style={{
+                                    "--dot-bg": isDone ? s.color : "#111827",
+                                    "--dot-border": isDone ? s.color : "#1f2937",
+                                    "--line-color": isDone && i < current ? s.color : "#111827",
+                                    "--tl-label-color": isDone ? s.color : "#1e2d3d",
+                                  }}
+                                >
+                                  <div className="ud-tl-dot">{isDone ? "✓" : ""}</div>
+                                  <div className="ud-tl-label">{step === "pending" ? "Applied" : step}</div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="ud-detail-header">
+                            <div>
+                              <div className="ud-detail-title">{activeApp.name}</div>
+                              <div className="ud-detail-sub">{activeApp.email}</div>
+                            </div>
+                            <span className="ud-status-dot-badge" style={{ "--sbg": s.bg, "--sc": s.color }}>
+                              <span className="ud-dot" />{s.label}
+                            </span>
+                          </div>
+
+                          <div className="ud-detail-grid">
+                            {[
+                              ["University", activeApp.university],
+                              ["Degree",     activeApp.degree],
+                              ["Year",       activeApp.year],
+                              ["Phone",      activeApp.phone],
+                              ["Skills",     activeApp.skills],
+                              ["Applied On", fmt(activeApp.created_at)],
+                            ].map(([label, val]) => (
+                              <div key={label} className="ud-detail-field">
+                                <div className="ud-detail-field-label">{label}</div>
+                                <div className="ud-detail-field-val">{val || "—"}</div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {activeApp.motivation && (
+                            <div className="ud-detail-motivation">
+                              <div className="ud-detail-motivation-label">Why this internship?</div>
+                              <div className="ud-detail-motivation-text">{activeApp.motivation}</div>
+                            </div>
+                          )}
+
+                          {activeApp.resume_url && (
+                            <a href={activeApp.resume_url} target="_blank" rel="noopener noreferrer" className="ud-resume-btn">
+                              ↗ View Resume (PDF)
+                            </a>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </>
+                )}
+              </>
+            )}
+
+            {/* ── DOCUMENTS TAB ── */}
+            {activeTab === "documents" && (
+              <div>
+                <div className="ud-section-title">My Documents</div>
+                {docsLoading ? (
+                  <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 13, color: "#334155", padding: "24px 0" }}>
+                    Loading documents...
+                  </div>
+                ) : documents.length === 0 ? (
+                  <div className="ud-docs-empty">
+                    <div className="ud-docs-empty-icon">📁</div>
+                    <div className="ud-docs-empty-text">
+                      // no documents available yet
+                      <span style={{ color: "#1a2535", display: "block", marginTop: 6 }}>
+                        Documents will appear here once the admin generates them for you.
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="ud-docs-grid">
+                    {documents.map((doc) => {
+                      const meta = DOC_META[doc.document_type] || {
+                        label: doc.document_type?.replace(/_/g, " ") || "Document",
+                        icon: "📄", color: "#94a3b8",
+                        bg: "rgba(148,163,184,0.08)", border: "rgba(148,163,184,0.2)",
+                      };
+                      return (
+                        <div
+                          key={doc.id}
+                          className="ud-doc-card"
+                          style={{ "--doc-color": meta.color, "--doc-bg": meta.bg, "--doc-border": meta.border }}
+                        >
+                          <div className="ud-doc-icon">{meta.icon}</div>
+                          <div className="ud-doc-label">{meta.label}</div>
+                          <div className="ud-doc-date">
+                            {doc.created_at ? `Issued ${fmt(doc.created_at)}` : "Recently issued"}
+                          </div>
+                          <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="ud-doc-download">
+                            ↗ View &amp; Download
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </main>
         </div>
-      )}
+      </div>
     </>
   );
 };
