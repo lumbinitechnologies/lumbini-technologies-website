@@ -16,6 +16,10 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: "dist",
     assetsDir: "assets",
+
+    // 👇 ADD THIS LINE
+    chunkSizeWarningLimit: 1000,
+
     rollupOptions: {
       output: {
         manualChunks: undefined,
