@@ -1,15 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../../services/supabase";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { session, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (session && !authLoading) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [session, authLoading, navigate]);
 
   const params = new URLSearchParams(location.search);
   const redirectParam = params.get("redirect");
@@ -33,12 +42,10 @@ const Login = () => {
 
     console.log("[Login] Attempting login for:", email);
 
-    const { data, error: signInError } = await supabase.auth.signInWithPassword(
-      {
-        email: email.trim(),
-        password,
-      },
-    );
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
 
     console.log("[Login] Result:", { data, error: signInError });
 
@@ -69,6 +76,14 @@ const Login = () => {
 
     setLoading(false);
   };
+
+  if (authLoading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", color: "white" }}>
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <>
@@ -223,6 +238,7 @@ const Login = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+            disabled={loading}
           />
 
           <input
@@ -232,6 +248,7 @@ const Login = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+            disabled={loading}
           />
 
           {error && <div className="login-error">{error}</div>}
