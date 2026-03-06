@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { motion, useSpring } from 'framer-motion';
+import React, { useEffect, useRef, useState } from "react";
+import { motion, useSpring } from "framer-motion";
 
 const CustomCursor = () => {
   const [enabled, setEnabled] = useState(true);
@@ -10,8 +10,10 @@ const CustomCursor = () => {
   const rafRef = useRef(null);
 
   useEffect(() => {
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const small = window.matchMedia('(max-width: 768px)').matches;
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const small = window.matchMedia("(max-width: 768px)").matches;
     setEnabled(!(reduce || small));
   }, []);
 
@@ -26,9 +28,9 @@ const CustomCursor = () => {
         yr.set(e.clientY);
       });
     };
-    window.addEventListener('mousemove', move, { passive: true });
+    window.addEventListener("mousemove", move, { passive: true });
     return () => {
-      window.removeEventListener('mousemove', move);
+      window.removeEventListener("mousemove", move);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [enabled, x, y, xr, yr]);
@@ -37,14 +39,51 @@ const CustomCursor = () => {
 
   return (
     <>
+      <style>{`
+        *, *::before, *::after {
+          cursor: none !important;
+        }
+        .cursor-dot,
+        .cursor-ring {
+          position: fixed;
+          top: 0;
+          left: 0;
+          pointer-events: none;
+          z-index: 99999;
+          border-radius: 50%;
+          will-change: transform;
+        }
+        .cursor-dot {
+          width: 8px;
+          height: 8px;
+          background: #ffffff;
+        }
+        .cursor-ring {
+          width: 32px;
+          height: 32px;
+          border: 2px solid rgba(255, 255, 255, 0.5);
+          background: transparent;
+        }
+      `}</style>
+
       <motion.div
         aria-hidden
-        style={{ x, y }}
+        style={{
+          x,
+          y,
+          translateX: "-50%",
+          translateY: "-50%",
+        }}
         className="cursor-dot"
       />
       <motion.div
         aria-hidden
-        style={{ x: xr, y: yr }}
+        style={{
+          x: xr,
+          y: yr,
+          translateX: "-50%",
+          translateY: "-50%",
+        }}
         className="cursor-ring"
       />
     </>
@@ -52,5 +91,3 @@ const CustomCursor = () => {
 };
 
 export default CustomCursor;
-
-

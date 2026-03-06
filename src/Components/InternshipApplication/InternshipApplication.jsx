@@ -1,106 +1,150 @@
-// InternshipApplication.jsx
-
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import './InternshipApplication.css';
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Upload } from "lucide-react";
+import { supabase } from "../../services/supabase";
+import "./InternshipApplication.css";
 
 const InternshipApplication = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    university: '',
-    degree: '',
-    graduationYear: '',
-    gpa: '',
-    skills: '',
-    experience: '',
-    motivation: '',
-    startDate: '',
-    duration: '',
-    department: '',
-    resume: null
-  });
-  const [submitted, setSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Calculate form completion percentage
-  const calculateProgress = () => {
-    const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'university', 'degree', 'graduationYear', 'skills', 'motivation', 'startDate', 'duration', 'department', 'resume'];
-    const filledFields = requiredFields.filter(field => {
-      if (field === 'resume') return form[field] !== null;
-      return form[field] !== '';
-    });
-    return Math.round((filledFields.length / requiredFields.length) * 100);
-  };
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    university: "",
+    degree: "",
+    year: "",
+    skills: "",
+    resume: null,
+    motivation: "",
+    confirmed: false,
+  });
+
+  const [resumeFileName, setResumeFileName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
-    const { name, value, type, files } = e.target;
-    setForm(prev => ({
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'file' ? files[0] : value
+      [name]: type === "checkbox" ? checked : value,
     }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleFileClick = () => {
-    document.getElementById('resume').click();
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData((prev) => ({ ...prev, resume: file }));
+      setResumeFileName(file.name);
+      if (errors.resume) setErrors((prev) => ({ ...prev, resume: "" }));
+    }
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = "Full name is required";
+    if (!formData.phone.trim()) newErrors.phone = "Phone is required";
+    if (!formData.university.trim())
+      newErrors.university = "College is required";
+    if (!formData.degree.trim()) newErrors.degree = "Degree is required";
+    if (!formData.year) newErrors.year = "Year / Semester is required";
+    if (!formData.skills.trim()) newErrors.skills = "Skills are required";
+    if (!formData.resume) newErrors.resume = "Resume is required";
+    if (!formData.motivation.trim())
+      newErrors.motivation = "Please answer this question";
+    if (!formData.confirmed)
+      newErrors.confirmed = "Please confirm before submitting";
+    return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      const firstErr = document.querySelector(".field-error");
+      if (firstErr)
+        firstErr.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
     setIsSubmitting(true);
 
-    // Create FormData to handle file upload
-    const formData = new FormData();
-    Object.keys(form).forEach(key => {
-      if (form[key] !== null && form[key] !== '') {
-        formData.append(key, form[key]);
-      }
-    });
-
     try {
-      // Replace this with your actual API endpoint
-      console.log('Internship Application Submitted:', form);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setSubmitted(true);
-    } catch (error) {
-      console.error('Error submitting application:', error);
-      alert('There was an error submitting your application. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData.user;
 
-  const handleBackToHome = () => {
-    navigate('/');
+      if (!user) {
+        alert("Please login first");
+        navigate("/Login?redirect=/internship-application", { replace: true });
+        return;
+      }
+
+      // Upload resume to Supabase Storage
+      const fileExt = formData.resume.name.split(".").pop();
+      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("resumes")
+        .upload(fileName, formData.resume);
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("resumes")
+        .getPublicUrl(fileName);
+
+      // Insert — column names match DB schema exactly
+      const { error } = await supabase.from("applications").insert([
+        {
+          name: formData.name,
+          email: user.email,
+          phone: formData.phone,
+          university: formData.university,
+          degree: formData.degree,
+          year: formData.year,
+          skills: formData.skills,
+          motivation: formData.motivation,
+          resume_url: publicUrlData.publicUrl,
+          status: "pending",
+        },
+      ]);
+
+      if (error) throw error;
+
+      setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      alert("Error submitting application: " + err.message);
+    }
+
+    setIsSubmitting(false);
   };
 
   if (submitted) {
     return (
-      <div className="application-container">
+      <div className="apply-page">
         <motion.div
-          className="success-message"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          className="apply-success"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
         >
           <div className="success-icon">✓</div>
-          <h2>Application Submitted Successfully!</h2>
-          <p>Thank you for applying for an internship at Lumbini Technologies.</p>
-          <p>We have received your application and will review it shortly.</p>
-          <p>You can expect to hear from us within 5-7 business days.</p>
-          <button onClick={handleBackToHome} className="back-home-btn">
-            Back to Home
+          <h2 className="success-title">Application Submitted!</h2>
+          <p className="success-text">
+            Thank you for applying. Our team will review your application and
+            get back to you soon.
+          </p>
+          <button
+            className="btn btn-primary"
+            onClick={() => navigate("/Career")}
+          >
+            Back to Careers
           </button>
         </motion.div>
       </div>
@@ -108,328 +152,292 @@ const InternshipApplication = () => {
   }
 
   return (
-    <div className="application-container">
+    <div className="apply-page">
+      <div className="apply-back-wrap">
+        <button className="apply-back-btn" onClick={() => navigate("/Career")}>
+          <ArrowLeft className="back-icon" />
+          Back to Careers
+        </button>
+      </div>
+
       <motion.div
-        className="application-form-wrapper"
-        initial={{ opacity: 0, y: 20 }}
+        className="apply-container"
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.5 }}
       >
-        <div className="form-header">
-          <button onClick={handleBackToHome} className="back-btn">
-            ← Back
-          </button>
-          <h1>Internship Application</h1>
-          <p>Join Lumbini Technologies and launch your career with us!</p>
-          
-          {/* Progress Bar */}
-          <div className="progress-container">
-            <div className="progress-label">Form Completion: {calculateProgress()}%</div>
-            <div className="progress-bar">
-              <div 
-                className="progress-fill" 
-                style={{ width: `${calculateProgress()}%` }}
-              ></div>
-            </div>
-          </div>
+        <div className="apply-header">
+          <h1 className="apply-title">
+            Student <span className="text-highlight">Internship</span>{" "}
+            Application
+          </h1>
+          <p className="apply-subtitle">
+            Fill in all the details carefully. Fields marked{" "}
+            <span className="required-star">*</span> are required.
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="application-form">
-          {/* Personal Information */}
+        <form onSubmit={handleSubmit} className="apply-form" noValidate>
+          {/* ── 1. PERSONAL ── */}
           <div className="form-section">
-            <h3>Personal Information</h3>
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="firstName">First Name *</label>
-                <input
-                  type="text"
-                  id="firstName"
-                  name="firstName"
-                  value={form.firstName}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="lastName">Last Name *</label>
-                <input
-                  type="text"
-                  id="lastName"
-                  name="lastName"
-                  value={form.lastName}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+            <div className="form-section-label">
+              <span className="section-number">1</span>
+              Personal Information
             </div>
-            
+
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="email">Email Address *</label>
+                <label className="form-label">
+                  Full Name <span className="required-star">*</span>
+                </label>
                 <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={form.email}
+                  type="text"
+                  name="name"
+                  className={`form-input ${errors.name ? "input-error" : ""}`}
+                  placeholder="John Doe"
+                  value={formData.name}
                   onChange={handleChange}
-                  required
                 />
+                {errors.name && (
+                  <span className="field-error">{errors.name}</span>
+                )}
               </div>
+
               <div className="form-group">
-                <label htmlFor="phone">Phone Number *</label>
+                <label className="form-label">
+                  Phone Number <span className="required-star">*</span>
+                </label>
                 <input
                   type="tel"
-                  id="phone"
                   name="phone"
-                  value={form.phone}
+                  className={`form-input ${errors.phone ? "input-error" : ""}`}
+                  placeholder="+91 XXXXX XXXXX"
+                  value={formData.phone}
                   onChange={handleChange}
-                  required
                 />
+                {errors.phone && (
+                  <span className="field-error">{errors.phone}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ── 2. EDUCATION ── */}
+          <div className="form-section">
+            <div className="form-section-label">
+              <span className="section-number">2</span>
+              Education
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">
+                  College / University <span className="required-star">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="university"
+                  className={`form-input ${errors.university ? "input-error" : ""}`}
+                  placeholder="e.g. VIT University"
+                  value={formData.university}
+                  onChange={handleChange}
+                />
+                {errors.university && (
+                  <span className="field-error">{errors.university}</span>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  Degree / Course <span className="required-star">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="degree"
+                  className={`form-input ${errors.degree ? "input-error" : ""}`}
+                  placeholder="e.g. B.Tech Computer Science"
+                  value={formData.degree}
+                  onChange={handleChange}
+                />
+                {errors.degree && (
+                  <span className="field-error">{errors.degree}</span>
+                )}
               </div>
             </div>
 
+            <div className="form-row single">
+              <div className="form-group">
+                <label className="form-label">
+                  Current Year / Semester{" "}
+                  <span className="required-star">*</span>
+                </label>
+                <select
+                  name="year"
+                  className={`form-input form-select ${errors.year ? "input-error" : ""}`}
+                  value={formData.year}
+                  onChange={handleChange}
+                >
+                  <option value="">Select year / semester</option>
+                  <option value="1st Year / Sem 1">1st Year / Sem 1</option>
+                  <option value="1st Year / Sem 2">1st Year / Sem 2</option>
+                  <option value="2nd Year / Sem 3">2nd Year / Sem 3</option>
+                  <option value="2nd Year / Sem 4">2nd Year / Sem 4</option>
+                  <option value="3rd Year / Sem 5">3rd Year / Sem 5</option>
+                  <option value="3rd Year / Sem 6">3rd Year / Sem 6</option>
+                  <option value="4th Year / Sem 7">4th Year / Sem 7</option>
+                  <option value="4th Year / Sem 8">4th Year / Sem 8</option>
+                </select>
+                {errors.year && (
+                  <span className="field-error">{errors.year}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ── 3. SKILLS ── */}
+          <div className="form-section">
+            <div className="form-section-label">
+              <span className="section-number">3</span>
+              Skills
+            </div>
+
             <div className="form-group">
-              <label htmlFor="address">Address</label>
+              <label className="form-label">
+                Technical Skills <span className="required-star">*</span>
+              </label>
               <input
                 type="text"
-                id="address"
-                name="address"
-                value={form.address}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="city">City</label>
-                <input
-                  type="text"
-                  id="city"
-                  name="city"
-                  value={form.city}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="state">State</label>
-                <input
-                  type="text"
-                  id="state"
-                  name="state"
-                  value={form.state}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="zipCode">ZIP Code</label>
-                <input
-                  type="text"
-                  id="zipCode"
-                  name="zipCode"
-                  value={form.zipCode}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Educational Information */}
-          <div className="form-section">
-            <h3>Educational Information</h3>
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="university">University/College *</label>
-                <input
-                  type="text"
-                  id="university"
-                  name="university"
-                  value={form.university}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="degree">Degree/Major *</label>
-                <input
-                  type="text"
-                  id="degree"
-                  name="degree"
-                  value={form.degree}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="graduationYear">Expected Graduation Year *</label>
-                <select
-                  id="graduationYear"
-                  name="graduationYear"
-                  value={form.graduationYear}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select Year</option>
-                  <option value="2024">2024</option>
-                  <option value="2025">2025</option>
-                  <option value="2026">2026</option>
-                  <option value="2027">2027</option>
-                  <option value="2028">2028</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label htmlFor="gpa">GPA (Optional)</label>
-                <input
-                  type="number"
-                  id="gpa"
-                  name="gpa"
-                  step="0.01"
-                  min="0"
-                  max="4"
-                  value={form.gpa}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Internship Details */}
-          <div className="form-section">
-            <h3>Internship Details</h3>
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="department">Preferred Department *</label>
-                <select
-                  id="department"
-                  name="department"
-                  value={form.department}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select Department</option>
-                  <option value="software-development">Software Development</option>
-                  <option value="web-development">Web Development</option>
-                  <option value="mobile-development">Mobile Development</option>
-                  <option value="data-science">Data Science</option>
-                  <option value="ui-ux-design">UI/UX Design</option>
-                  <option value="digital-marketing">Digital Marketing</option>
-                  <option value="quality-assurance">Quality Assurance</option>
-                  <option value="project-management">Project Management</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label htmlFor="duration">Internship Duration *</label>
-                <select
-                  id="duration"
-                  name="duration"
-                  value={form.duration}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select Duration</option>
-                  <option value="3-months">3 Months</option>
-                  <option value="6-months">6 Months</option>
-                  <option value="12-months">12 Months</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="startDate">Preferred Start Date *</label>
-              <input
-                type="date"
-                id="startDate"
-                name="startDate"
-                value={form.startDate}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
-
-          {/* Skills and Experience */}
-          <div className="form-section">
-            <h3>Skills and Experience</h3>
-            <div className="form-group">
-              <label htmlFor="skills">Technical Skills *</label>
-              <textarea
-                id="skills"
                 name="skills"
-                value={form.skills}
+                className={`form-input ${errors.skills ? "input-error" : ""}`}
+                placeholder="e.g. React, Node.js, Python, Figma..."
+                value={formData.skills}
                 onChange={handleChange}
-                rows={3}
-                placeholder="List your programming languages, frameworks, tools, etc."
-                required
               />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="experience">Relevant Experience</label>
-              <textarea
-                id="experience"
-                name="experience"
-                value={form.experience}
-                onChange={handleChange}
-                rows={3}
-                placeholder="Describe any relevant projects, work experience, or achievements"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="motivation">Why do you want to intern with Lumbini Technologies? *</label>
-              <textarea
-                id="motivation"
-                name="motivation"
-                value={form.motivation}
-                onChange={handleChange}
-                rows={4}
-                placeholder="Tell us about your motivation and what you hope to achieve during this internship"
-                required
-              />
+              <span className="field-hint">Separate skills with commas</span>
+              {errors.skills && (
+                <span className="field-error">{errors.skills}</span>
+              )}
             </div>
           </div>
 
-          {/* Resume Upload */}
+          {/* ── 4. RESUME ── */}
           <div className="form-section">
-            <h3>Resume</h3>
+            <div className="form-section-label">
+              <span className="section-number">4</span>
+              Resume
+            </div>
+
             <div className="form-group">
-              <label htmlFor="resume">Upload Your Resume *</label>
-              <div className="file-upload-wrapper">
+              <label className="form-label">
+                Upload Resume (PDF) <span className="required-star">*</span>
+              </label>
+              <label
+                className={`file-upload-label ${errors.resume ? "file-error" : ""}`}
+              >
                 <input
                   type="file"
-                  id="resume"
-                  name="resume"
-                  accept=".pdf,.doc,.docx"
-                  onChange={handleChange}
-                  required
-                  className="file-input"
-                  style={{ display: 'none' }}
+                  accept=".pdf"
+                  className="file-input-hidden"
+                  onChange={handleFileChange}
                 />
-                <div className="file-upload-display" onClick={handleFileClick}>
-                  {form.resume ? (
-                    <span className="file-selected">
-                      📄 {form.resume.name}
-                    </span>
+                <span className="file-upload-inner">
+                  <Upload className="upload-icon" />
+                  {resumeFileName ? (
+                    <span className="file-name">{resumeFileName}</span>
                   ) : (
                     <span className="file-placeholder">
-                      Click to choose file (PDF, DOC, DOCX)
+                      Click to upload your resume (PDF only)
                     </span>
                   )}
-                </div>
-              </div>
-              <p className="file-info">Maximum file size: 5MB</p>
+                </span>
+              </label>
+              {errors.resume && (
+                <span className="field-error">{errors.resume}</span>
+              )}
             </div>
           </div>
 
-          <div className="form-actions">
+          {/* ── 5. SHORT QUESTION ── */}
+          <div className="form-section">
+            <div className="form-section-label">
+              <span className="section-number">5</span>
+              Short Question
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                Why do you want this internship?{" "}
+                <span className="required-star">*</span>
+              </label>
+              <textarea
+                name="motivation"
+                rows="5"
+                className={`form-textarea ${errors.motivation ? "input-error" : ""}`}
+                placeholder="Tell us what excites you about this opportunity..."
+                value={formData.motivation}
+                onChange={handleChange}
+              />
+              <span className="field-hint">
+                Minimum 50 characters recommended
+              </span>
+              {errors.motivation && (
+                <span className="field-error">{errors.motivation}</span>
+              )}
+            </div>
+          </div>
+
+          {/* ── 6. CONFIRMATION ── */}
+          <div className="form-section">
+            <div className="form-section-label">
+              <span className="section-number">6</span>
+              Confirmation
+            </div>
+
+            <div className="form-group">
+              <label
+                className={`checkbox-label ${errors.confirmed ? "checkbox-error" : ""}`}
+              >
+                <input
+                  type="checkbox"
+                  name="confirmed"
+                  className="checkbox-input"
+                  checked={formData.confirmed}
+                  onChange={handleChange}
+                />
+                <span className="checkbox-custom" />
+                <span className="checkbox-text">
+                  I confirm that the information provided is correct and
+                  accurate to the best of my knowledge.
+                </span>
+              </label>
+              {errors.confirmed && (
+                <span className="field-error">{errors.confirmed}</span>
+              )}
+            </div>
+          </div>
+
+          {/* ── ACTIONS ── */}
+          <div className="apply-actions">
             <button
-              type="submit"
-              className="submit-btn"
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => navigate("/Career")}
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Submitting...' : 'Submit Application'}
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <span className="btn-loading">
+                  <span className="spinner" /> Submitting...
+                </span>
+              ) : (
+                "Submit Application"
+              )}
             </button>
           </div>
         </form>

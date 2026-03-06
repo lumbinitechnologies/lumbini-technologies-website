@@ -1,208 +1,90 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Heart, 
-  Coffee, 
-  Award,
-  Users,
-  X
-} from 'lucide-react';
-import './Career.css';
+import React from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { Heart, Coffee, Award, Users } from "lucide-react";
+import { supabase } from "../../services/supabase";
+import "./Career.css";
 
 const Career = () => {
-  const [showApplication, setShowApplication] = useState(false);
+  const navigate = useNavigate();
+
+  const handleApply = async () => {
+    const { data } = await supabase.auth.getUser();
+
+    if (!data.user) {
+      // User not logged in
+      navigate("/Login?redirect=/internship-application");
+    } else {
+      // User logged in
+      navigate("/internship-application");
+    }
+  };
 
   const internship = {
     id: 1,
     title: "Student Internship Application",
-    description: "We're currently accepting applications for student internships. If you're passionate about learning and building real-world projects with us, submit your application using the form.",
+    description: `We're currently accepting applications for student internships. If you're passionate about learning and building real-world projects with us, submit your application using the form.`,
   };
 
   const benefits = [
-    { 
-      icon: <Heart className="w-8 h-8" />, 
-      title: "Health & Wellness", 
-      description: "Comprehensive health insurance, mental health support, and wellness programs for you and your family" 
+    {
+      icon: <Heart className="w-8 h-8" />,
+      title: "Health & Wellness",
+      description:
+        "Comprehensive health insurance, mental health support, and wellness programs for you and your family",
     },
-    { 
-      icon: <Coffee className="w-8 h-8" />, 
-      title: "Work-Life Balance", 
-      description: "Flexible working hours, remote work options, unlimited PTO, and a supportive work environment" 
+    {
+      icon: <Coffee className="w-8 h-8" />,
+      title: "Work-Life Balance",
+      description:
+        "Flexible working hours, remote work options, unlimited PTO, and a supportive work environment",
     },
-    { 
-      icon: <Award className="w-8 h-8" />, 
-      title: "Growth & Learning", 
-      description: "Learning budget, conference attendance, certification support, and clear career development paths" 
+    {
+      icon: <Award className="w-8 h-8" />,
+      title: "Growth & Learning",
+      description:
+        "Learning budget, conference attendance, certification support, and clear career development paths",
     },
-    { 
-      icon: <Users className="w-8 h-8" />, 
-      title: "Great Culture", 
-      description: "Collaborative environment, team events, innovation time, and work with amazing colleagues" 
-    }
+    {
+      icon: <Users className="w-8 h-8" />,
+      title: "Great Culture",
+      description:
+        "Collaborative environment, team events, innovation time, and work with amazing colleagues",
+    },
   ];
 
   const JobCard = ({ job }) => (
-    <motion.div
-      whileHover={{ y: -5 }}
-      className="job-card"
-    >
+    <motion.div whileHover={{ y: -5 }} className="job-card">
       <div className="job-card-header">
         <div className="job-info">
           <h3 className="job-title">{job.title}</h3>
         </div>
       </div>
-      
+
       <p className="job-description">{job.description}</p>
-      
+
       <div className="modal-actions">
-        <button 
-          onClick={() => setShowApplication(job)}
-          className="btn btn-primary"
-        >
+        <button onClick={handleApply} className="btn btn-primary">
           Apply Now
         </button>
       </div>
     </motion.div>
   );
 
-  const ApplicationModal = ({ job, onClose }) => {
-    const [formData, setFormData] = useState({
-      name: '',
-      email: '',
-      phone: '',
-      resume: null,
-      coverLetter: ''
-    });
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      setIsSubmitting(true);
-      
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        alert('Application submitted successfully!');
-        onClose();
-      } catch (error) {
-        alert('Error submitting application. Please try again.');
-      } finally {
-        setIsSubmitting(false);
-      }
-    };
-
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="modal-overlay"
-        onClick={onClose}
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="application-modal"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="modal-header">
-            <h2 className="modal-title">Apply for {job.title}</h2>
-            <button onClick={onClose} className="modal-close-btn">
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-          
-          <form onSubmit={handleSubmit} className="application-form">
-            <div className="form-group">
-              <label className="form-label">Full Name</label>
-              <input
-                type="text"
-                required
-                className="form-input"
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-              />
-            </div>
-            
-            <div className="form-group">
-              <label className="form-label">Email</label>
-              <input
-                type="email"
-                required
-                className="form-input"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-              />
-            </div>
-            
-            <div className="form-group">
-              <label className="form-label">Phone</label>
-              <input
-                type="tel"
-                required
-                className="form-input"
-                value={formData.phone}
-                onChange={(e) => setFormData({...formData, phone: e.target.value})}
-              />
-            </div>
-            
-            <div className="form-group">
-              <label className="form-label">Resume (PDF, DOC, DOCX)</label>
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx"
-                className="form-input"
-                onChange={(e) => setFormData({...formData, resume: e.target.files[0]})}
-              />
-            </div>
-            
-            <div className="form-group">
-              <label className="form-label">Cover Letter</label>
-              <textarea
-                rows="4"
-                className="form-textarea"
-                value={formData.coverLetter}
-                onChange={(e) => setFormData({...formData, coverLetter: e.target.value})}
-                placeholder="Tell us why you're perfect for this role..."
-              />
-            </div>
-            
-            <div className="modal-actions">
-              <button 
-                type="submit"
-                className="btn btn-primary"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit Application'}
-              </button>
-              <button 
-                type="button"
-                onClick={onClose}
-                className="btn btn-secondary"
-                disabled={isSubmitting}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </motion.div>
-      </motion.div>
-    );
-  };
-
   return (
     <div className="career-page">
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-content">
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             className="hero-title"
           >
             Join Our <span className="text-highlight">Innovation</span> Journey
           </motion.h1>
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
@@ -210,7 +92,8 @@ const Career = () => {
           >
             Build the future with cutting-edge technology and an amazing team
           </motion.p>
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -220,29 +103,35 @@ const Career = () => {
               <span className="stat-number">20+</span>
               <p className="stat-label">Team Members</p>
             </div>
+
             <div className="stat-card">
               <span className="stat-number">1</span>
               <p className="stat-label">Active Internship</p>
             </div>
+
             <div className="stat-card">
               <span className="stat-number">Vijayawada</span>
               <p className="stat-label">Current Workspace</p>
             </div>
+
             <div className="stat-card">
               <span className="stat-number">Bangalore</span>
               <p className="stat-label">Workspace Coming Soon</p>
             </div>
           </motion.div>
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             className="info-banner"
           >
             <p className="info-text">
-              We are currently offering <strong>internships for students</strong> only. Our team has
-              <strong> 20+ members</strong>. One workspace is active in <strong>Vijayawada</strong>, 
-              and another is <strong>coming soon in Bangalore</strong>.
+              We are currently offering{" "}
+              <strong>internships for students</strong>
+              only. Our team has <strong>20+ members</strong>. One workspace is
+              active in <strong>Vijayawada</strong>, and another is{" "}
+              <strong>coming soon in Bangalore</strong>.
             </p>
           </motion.div>
         </div>
@@ -252,6 +141,7 @@ const Career = () => {
       <section className="benefits-section">
         <div className="section-container">
           <h2 className="section-title">Why Work With Us?</h2>
+
           <div className="benefits-grid">
             {benefits.map((benefit, index) => (
               <motion.div
@@ -270,7 +160,7 @@ const Career = () => {
         </div>
       </section>
 
-      {/* Internship Application */}
+      {/* Internship Section */}
       <section className="jobs-section">
         <div className="section-container">
           <h2 className="section-title">Internship Application</h2>
@@ -286,16 +176,6 @@ const Career = () => {
           </div>
         </div>
       </section>
-
-      {/* Application Modal */}
-      <AnimatePresence>
-        {showApplication && (
-          <ApplicationModal 
-            job={showApplication} 
-            onClose={() => setShowApplication(false)} 
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 };

@@ -1,18 +1,28 @@
-/* Career.css - Styles for Career Page Component */
-
-/* Base Styles */
+/* ======================
+   CAREER PAGE BASE
+   ====================== */
 .career-page {
   min-height: 100vh;
   background: #000;
   color: #fff;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 }
 
-/* Hero Section */
+/* ======================
+   HERO SECTION
+   ====================== */
 .hero-section {
   position: relative;
-  padding: 5rem 1rem;
-  background: linear-gradient(135deg, rgba(250, 204, 21, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%);
+  padding: clamp(3rem, 8vw, 6rem) clamp(1rem, 5vw, 3rem);
+  background: linear-gradient(
+    135deg,
+    rgba(250, 204, 21, 0.1) 0%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
 }
 
 .hero-content {
@@ -22,16 +32,10 @@
 }
 
 .hero-title {
-  font-size: 2.5rem;
+  font-size: clamp(1.6rem, 5vw, 3.75rem);
   font-weight: 700;
-  margin-bottom: 1.5rem;
+  margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
   line-height: 1.1;
-}
-
-@media (min-width: 768px) {
-  .hero-title {
-    font-size: 3.75rem;
-  }
 }
 
 .text-highlight {
@@ -39,9 +43,9 @@
 }
 
 .hero-subtitle {
-  font-size: 1.25rem;
+  font-size: clamp(0.9rem, 2vw, 1.25rem);
   color: #d1d5db;
-  margin-bottom: 2rem;
+  margin-bottom: clamp(1rem, 2.5vw, 2rem);
   line-height: 1.6;
 }
 
@@ -49,48 +53,61 @@
   background: #111827;
   border: 1px solid #374151;
   border-radius: 0.5rem;
-  padding: 1rem 1.25rem;
+  padding: clamp(0.75rem, 1.5vw, 1rem) clamp(1rem, 2vw, 1.25rem);
   margin-top: 1rem;
 }
 
 .info-text {
   margin: 0;
   color: #e5e7eb;
+  font-size: clamp(0.8rem, 1.4vw, 1rem);
 }
 
 .hero-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: clamp(0.5rem, 1.5vw, 1rem);
   justify-content: center;
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
 }
 
 .stat-card {
   background: #111827;
-  padding: 1.5rem;
+  padding: clamp(1rem, 2vw, 1.5rem);
   border-radius: 0.5rem;
   border: 1px solid #374151;
-  min-width: 120px;
+  min-width: clamp(100px, 14vw, 140px);
+  text-align: center;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.stat-card:hover {
+  border-color: #facc15;
+  transform: translateY(-3px);
 }
 
 .stat-number {
   display: block;
-  font-size: 2rem;
+  font-size: clamp(1.4rem, 3.5vw, 2rem);
   font-weight: 700;
   color: #facc15;
   line-height: 1;
 }
 
 .stat-label {
-  font-size: 0.875rem;
+  font-size: clamp(0.7rem, 1.2vw, 0.875rem);
   color: #9ca3af;
   margin-top: 0.5rem;
   margin-bottom: 0;
 }
 
-/* Benefits Section */
+/* ======================
+   BENEFITS SECTION
+   ====================== */
 .benefits-section {
-  padding: 4rem 1rem;
+  padding: clamp(2rem, 6vw, 4rem) clamp(1rem, 5vw, 3rem);
   background: #111827;
 }
 
@@ -100,38 +117,31 @@
 }
 
 .section-title {
-  font-size: 2rem;
+  font-size: clamp(1.3rem, 3.5vw, 2rem);
   font-weight: 700;
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: clamp(1.5rem, 4vw, 3rem);
   color: #fff;
 }
 
 .benefits-grid {
   display: grid;
-  gap: 2rem;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 768px) {
-  .benefits-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .benefits-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
+  gap: clamp(1rem, 2.5vw, 2rem);
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(clamp(160px, 20vw, 220px), 1fr)
+  );
 }
 
 .benefit-card {
   text-align: center;
-  padding: 2rem 1.5rem;
+  padding: clamp(1.2rem, 2.5vw, 2rem) clamp(1rem, 2vw, 1.5rem);
   background: #000;
   border-radius: 0.5rem;
   border: 1px solid #374151;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
   position: relative;
   overflow: hidden;
 }
@@ -141,13 +151,21 @@
   border-color: #facc15;
 }
 
+/* Glow border — matches site-wide card style */
 .benefit-card::before {
   content: "";
   position: absolute;
   inset: -2px;
   border-radius: inherit;
-  background: conic-gradient(from 0deg, rgba(250, 204, 21, 0.0), rgba(250, 204, 21, 0.35), rgba(255,255,255,0.12), rgba(250, 204, 21, 0.35), rgba(250, 204, 21, 0.0));
-  filter: blur(12px);
+  background: conic-gradient(
+    from 0deg,
+    rgba(250, 204, 21, 0),
+    rgba(250, 204, 21, 0.35),
+    rgba(255, 255, 255, 0.12),
+    rgba(250, 204, 21, 0.35),
+    rgba(250, 204, 21, 0)
+  );
+  filter: blur(14px);
   opacity: 0;
   transition: opacity 0.3s ease;
   z-index: 0;
@@ -158,17 +176,20 @@
   animation: cardGlowSpin 0s linear infinite;
 }
 
-.benefit-card > * { position: relative; z-index: 1; }
+.benefit-card > * {
+  position: relative;
+  z-index: 1;
+}
 
 .benefit-icon {
   color: #facc15;
-  margin-bottom: 1rem;
+  margin-bottom: clamp(0.5rem, 1.2vw, 1rem);
   display: flex;
   justify-content: center;
 }
 
 .benefit-title {
-  font-size: 1.25rem;
+  font-size: clamp(0.95rem, 1.8vw, 1.25rem);
   font-weight: 600;
   margin-bottom: 0.5rem;
   color: #fff;
@@ -176,50 +197,57 @@
 
 .benefit-description {
   color: #9ca3af;
-  font-size: 0.875rem;
+  font-size: clamp(0.75rem, 1.2vw, 0.875rem);
   line-height: 1.5;
 }
 
-/* Jobs Section */
+/* ======================
+   JOBS SECTION
+   ====================== */
 .jobs-section {
-  padding: 4rem 1rem;
+  padding: clamp(2rem, 6vw, 4rem) clamp(1rem, 5vw, 3rem);
 }
 
 /* Filters */
 .filters-container {
-  margin-bottom: 2rem;
+  margin-bottom: clamp(1rem, 2.5vw, 2rem);
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: clamp(0.5rem, 1.5vw, 1rem);
   align-items: center;
 }
 
 .search-box {
   position: relative;
   flex: 1;
-  min-width: 16rem;
+  min-width: clamp(200px, 30vw, 260px);
 }
 
 .search-icon {
   position: absolute;
   left: 0.75rem;
-  top: 0.75rem;
-  width: 1.25rem;
-  height: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(14px, 1.5vw, 20px);
+  height: clamp(14px, 1.5vw, 20px);
   color: #9ca3af;
   pointer-events: none;
 }
 
 .search-input {
   width: 100%;
-  padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+  padding: clamp(0.4rem, 0.8vw, 0.5rem) 0.75rem clamp(0.4rem, 0.8vw, 0.5rem)
+    2.5rem;
   background: #111827;
   border: 1px solid #374151;
   border-radius: 0.5rem;
   color: #fff;
-  font-size: 0.875rem;
+  font-size: clamp(0.8rem, 1.2vw, 0.875rem);
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  box-sizing: border-box;
 }
 
 .search-input:focus {
@@ -232,12 +260,12 @@
 }
 
 .filter-select {
-  padding: 0.5rem 0.75rem;
+  padding: clamp(0.4rem, 0.8vw, 0.5rem) clamp(0.5rem, 1vw, 0.75rem);
   background: #111827;
   border: 1px solid #374151;
   border-radius: 0.5rem;
   color: #fff;
-  font-size: 0.875rem;
+  font-size: clamp(0.8rem, 1.2vw, 0.875rem);
   outline: none;
   cursor: pointer;
   transition: border-color 0.2s ease;
@@ -255,7 +283,7 @@
 /* Job Cards */
 .jobs-grid {
   display: grid;
-  gap: 1.5rem;
+  gap: clamp(0.8rem, 2vw, 1.5rem);
   grid-template-columns: 1fr;
 }
 
@@ -263,7 +291,7 @@
   background: #111827;
   border: 1px solid #374151;
   border-radius: 0.5rem;
-  padding: 1.5rem;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
@@ -280,21 +308,35 @@
   position: absolute;
   inset: -2px;
   border-radius: inherit;
-  background: conic-gradient(from 0deg, rgba(250, 204, 21, 0.0), rgba(250, 204, 21, 0.35), rgba(255,255,255,0.12), rgba(250, 204, 21, 0.35), rgba(250, 204, 21, 0.0));
-  filter: blur(12px);
+  background: conic-gradient(
+    from 0deg,
+    rgba(250, 204, 21, 0),
+    rgba(250, 204, 21, 0.35),
+    rgba(255, 255, 255, 0.12),
+    rgba(250, 204, 21, 0.35),
+    rgba(250, 204, 21, 0)
+  );
+  filter: blur(14px);
   opacity: 0;
   transition: opacity 0.3s ease;
   z-index: 0;
 }
 
-.job-card:hover::before { opacity: 1; animation: cardGlowSpin 0s linear infinite; }
-.job-card > * { position: relative; z-index: 1; }
+.job-card:hover::before {
+  opacity: 1;
+  animation: cardGlowSpin 0s linear infinite;
+}
+.job-card > * {
+  position: relative;
+  z-index: 1;
+}
 
 .job-card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1rem;
+  margin-bottom: clamp(0.5rem, 1.2vw, 1rem);
+  gap: 0.5rem;
 }
 
 .job-info {
@@ -302,7 +344,7 @@
 }
 
 .job-title {
-  font-size: 1.25rem;
+  font-size: clamp(1rem, 2vw, 1.25rem);
   font-weight: 600;
   color: #fff;
   margin-bottom: 0.5rem;
@@ -312,8 +354,8 @@
 .job-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  font-size: 0.875rem;
+  gap: clamp(0.4rem, 1vw, 1rem);
+  font-size: clamp(0.75rem, 1.2vw, 0.875rem);
   color: #9ca3af;
 }
 
@@ -324,17 +366,17 @@
 }
 
 .job-arrow {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: clamp(14px, 1.5vw, 20px);
+  height: clamp(14px, 1.5vw, 20px);
   color: #facc15;
   flex-shrink: 0;
 }
 
 .job-description {
   color: #d1d5db;
-  font-size: 0.875rem;
+  font-size: clamp(0.78rem, 1.2vw, 0.875rem);
   line-height: 1.5;
-  margin-bottom: 1rem;
+  margin-bottom: clamp(0.5rem, 1.2vw, 1rem);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -345,13 +387,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .job-details {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  font-size: 0.875rem;
+  gap: clamp(0.5rem, 1.2vw, 1rem);
+  font-size: clamp(0.75rem, 1.2vw, 0.875rem);
+  flex-wrap: wrap;
 }
 
 .job-experience {
@@ -366,7 +411,9 @@
   gap: 0.25rem;
 }
 
-/* Modal Styles */
+/* ======================
+   MODAL STYLES
+   ====================== */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -374,35 +421,37 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: clamp(0.5rem, 2vw, 1rem);
   z-index: 50;
   backdrop-filter: blur(4px);
 }
 
-.job-modal, .application-modal {
+.job-modal,
+.application-modal {
   background: #111827;
   border-radius: 0.5rem;
-  padding: 1.5rem;
-  max-width: 32rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
   width: 100%;
+  max-width: clamp(300px, 90vw, 32rem);
   max-height: 90vh;
   overflow-y: auto;
   border: 1px solid #374151;
 }
 
 .job-modal {
-  max-width: 42rem;
+  max-width: clamp(300px, 92vw, 42rem);
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1rem;
+  margin-bottom: clamp(0.75rem, 1.5vw, 1rem);
+  gap: 0.5rem;
 }
 
 .modal-title {
-  font-size: 1.5rem;
+  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
   font-weight: 700;
   color: #fff;
   line-height: 1.3;
@@ -416,6 +465,7 @@
   cursor: pointer;
   padding: 0.25rem;
   transition: color 0.2s ease;
+  flex-shrink: 0;
 }
 
 .modal-close-btn:hover {
@@ -423,21 +473,22 @@
 }
 
 .modal-meta {
-  margin-bottom: 1.5rem;
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
 }
 
 .modal-description {
   color: #d1d5db;
   line-height: 1.6;
-  margin-bottom: 1.5rem;
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+  font-size: clamp(0.82rem, 1.3vw, 0.95rem);
 }
 
 .requirements-section {
-  margin-bottom: 1.5rem;
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
 }
 
 .requirements-title {
-  font-size: 1.125rem;
+  font-size: clamp(0.95rem, 1.8vw, 1.125rem);
   font-weight: 600;
   color: #fff;
   margin-bottom: 0.75rem;
@@ -447,12 +498,11 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  space: 0.5rem 0;
 }
 
 .requirement-item {
   color: #d1d5db;
-  font-size: 0.875rem;
+  font-size: clamp(0.78rem, 1.2vw, 0.875rem);
   line-height: 1.5;
   display: flex;
   align-items: flex-start;
@@ -469,20 +519,24 @@
 
 .modal-actions {
   display: flex;
-  gap: 1rem;
-  padding-top: 1rem;
+  flex-wrap: wrap;
+  gap: clamp(0.5rem, 1.5vw, 1rem);
+  padding-top: clamp(0.75rem, 1.5vw, 1rem);
 }
 
-/* Button Styles */
+/* ======================
+   BUTTONS
+   ====================== */
 .btn {
-  padding: 0.5rem 1.5rem;
+  padding: clamp(0.4rem, 0.8vw, 0.5rem) clamp(1rem, 2vw, 1.5rem);
   border-radius: 0.5rem;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: clamp(0.78rem, 1.2vw, 0.875rem);
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
   outline: none;
+  white-space: nowrap;
 }
 
 .btn-primary {
@@ -513,11 +567,19 @@
   box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.3);
 }
 
-/* Form Styles */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ======================
+   FORM STYLES
+   ====================== */
 .application-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: clamp(0.75rem, 1.5vw, 1rem);
 }
 
 .form-group {
@@ -526,21 +588,24 @@
 }
 
 .form-label {
-  font-size: 0.875rem;
+  font-size: clamp(0.78rem, 1.2vw, 0.875rem);
   font-weight: 500;
   color: #d1d5db;
   margin-bottom: 0.5rem;
 }
 
-.form-input, .form-textarea {
-  padding: 0.75rem;
+.form-input,
+.form-textarea {
+  padding: clamp(0.5rem, 1vw, 0.75rem);
   background: #374151;
   border: 1px solid #4b5563;
   border-radius: 0.375rem;
   color: #fff;
-  font-size: 0.875rem;
+  font-size: clamp(0.78rem, 1.2vw, 0.875rem);
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .form-input[type="file"] {
@@ -565,123 +630,40 @@
   background: #fde047;
 }
 
-.form-input:focus, .form-textarea:focus {
+.form-input:focus,
+.form-textarea:focus {
   border-color: #facc15;
   box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.1);
 }
 
-.form-input::placeholder, .form-textarea::placeholder {
+.form-input::placeholder,
+.form-textarea::placeholder {
   color: #9ca3af;
 }
 
 .form-textarea {
   resize: vertical;
-  min-height: 100px;
+  min-height: clamp(80px, 12vw, 120px);
   font-family: inherit;
 }
 
-/* No Results */
+/* ======================
+   NO RESULTS
+   ====================== */
 .no-results {
   text-align: center;
-  padding: 3rem 0;
+  padding: clamp(1.5rem, 5vw, 3rem) 0;
 }
 
 .no-results-text {
   color: #9ca3af;
-  font-size: 1.125rem;
+  font-size: clamp(0.9rem, 1.8vw, 1.125rem);
   margin: 0;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .hero-section {
-    padding: 3rem 1rem;
-  }
-  
-  .hero-title {
-    font-size: 2rem;
-  }
-  
-  .hero-subtitle {
-    font-size: 1rem;
-  }
-  
-  .hero-stats {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .stat-card {
-    width: 100%;
-    max-width: 200px;
-  }
-  
-  .benefits-section, .jobs-section {
-    padding: 2rem 1rem;
-  }
-  
-  .section-title {
-    font-size: 1.75rem;
-  }
-  
-  .filters-container {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .search-box {
-    min-width: auto;
-  }
-  
-  .job-meta {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .job-footer {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  
-  .modal-actions {
-    flex-direction: column;
-  }
-  
-  .job-modal, .application-modal {
-    margin: 1rem;
-    max-width: none;
-    width: calc(100% - 2rem);
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-title {
-    font-size: 1.75rem;
-  }
-  
-  .section-title {
-    font-size: 1.5rem;
-  }
-  
-  .job-card {
-    padding: 1rem;
-  }
-  
-  .job-title {
-    font-size: 1.125rem;
-  }
-  
-  .modal-title {
-    font-size: 1.25rem;
-  }
-  
-  .job-modal, .application-modal {
-    padding: 1rem;
-  }
-}
-
-/* Custom Scrollbar */
+/* ======================
+   CUSTOM SCROLLBAR
+   ====================== */
 .job-modal::-webkit-scrollbar,
 .application-modal::-webkit-scrollbar {
   width: 6px;
@@ -704,18 +686,9 @@
   background: #fde047;
 }
 
-/* Loading and Disabled States */
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn:disabled:hover {
-  transform: none;
-}
-
-/* Animation Classes */
+/* ======================
+   ANIMATIONS
+   ====================== */
 .fade-in {
   animation: fadeIn 0.3s ease-in-out;
 }
@@ -731,7 +704,18 @@
   }
 }
 
-/* Focus Management for Accessibility */
+@keyframes cardGlowSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ======================
+   ACCESSIBILITY
+   ====================== */
 .job-card:focus {
   outline: 2px solid #facc15;
   outline-offset: 2px;
@@ -745,56 +729,79 @@
   outline-offset: 2px;
 }
 
-/* High Contrast Mode Support */
-@media (prefers-contrast: high) {
-  .job-card {
-    border-width: 2px;
-  }
-  
-  .job-card:hover {
-    border-width: 3px;
-  }
-  
-  .btn-primary {
-    border: 2px solid #000;
-  }
-  
-  .btn-secondary {
-    border-width: 2px;
-  }
-}
-
-/* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  
-  .job-card:hover {
-    transform: none;
-  }
-  
-  .benefit-card:hover {
+  .job-card:hover,
+  .benefit-card:hover,
+  .stat-card:hover {
     transform: none;
   }
 }
 
-/* Print Styles */
+@media (prefers-contrast: high) {
+  .job-card,
+  .benefit-card {
+    border-width: 2px;
+  }
+  .job-card:hover,
+  .benefit-card:hover {
+    border-width: 3px;
+  }
+  .btn-primary {
+    border: 2px solid #000;
+  }
+  .btn-secondary {
+    border-width: 2px;
+  }
+}
+
+/* ======================
+   PRINT
+   ====================== */
 @media print {
   .career-page {
     background: white;
     color: black;
   }
-  
   .modal-overlay,
   .btn {
     display: none;
   }
-  
   .job-card {
     border: 1px solid #000;
     break-inside: avoid;
+  }
+}
+
+/* ======================
+   SMALL SCREEN OVERRIDES
+   (only for things clamp can't handle alone)
+   ====================== */
+@media (max-width: 480px) {
+  .filters-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    min-width: auto;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .hero-stats {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .stat-card {
+    width: 100%;
+    max-width: 200px;
   }
 }
