@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../../services/supabase";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import useAuthGuard from "../hooks/useAuthGuard";
 
 const STATUS_CONFIG = {
   pending: {
@@ -57,7 +58,6 @@ const DOC_META = {
 
 const UserDashboard = () => {
   const navigate = useNavigate();
-  // ── Use your existing AuthContext instead of useAuthGuard ──────────────────
   const { session, user, loading: authLoading } = useAuth();
 
   const [applications, setApplications] = useState([]);
@@ -69,13 +69,8 @@ const UserDashboard = () => {
   const [docsLoading, setDocsLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState("applications");
-
-  // ── Auth guard (mirrors your original useEffect) ───────────────────────────
-  useEffect(() => {
-    if (!authLoading && !session) {
-      navigate("/Login?redirect=/dashboard", { replace: true });
-    }
-  }, [session, authLoading, navigate]);
+  // Centralized auth guard redirects unauthenticated users back to Login with redirect param
+  useAuthGuard("/Login");
 
   useEffect(() => {
     if (!user) return;

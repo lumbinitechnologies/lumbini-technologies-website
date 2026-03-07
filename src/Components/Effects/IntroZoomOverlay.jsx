@@ -4,29 +4,57 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Fullscreen intro image that zooms on initial scroll and reveals the site
-// - Pinned section, scrubs scale 1 -> 1.6 while fading out overlay
-// - Disabled on small screens and when prefers-reduced-motion
+const QUERIES = {
+  reduceMotion: '(prefers-reduced-motion: reduce)',
+  portrait: '(orientation: portrait)',
+  small: '(max-width: 768px)',
+};
+
+const shouldEnableEffect = () =>
+  !Object.values(QUERIES).some(q => window.matchMedia(q).matches);
+
 const IntroZoomOverlay = ({ src, alt = 'Intro' }) => {
   const wrapRef = useRef(null);
   const bgRef = useRef(null);
-  const [enabled, setEnabled] = useState(true);
 
+  // ✅ Three states: 'pending' (not yet checked), true, false
+  const [enabled, setEnabled] = useState('pending');
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  // Evaluate media queries — with live listeners for orientation change
   useEffect(() => {
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    setEnabled(!reduce);
-    if (!reduce) {
-      document.body.classList.add('intro-active');
-    }
+    const check = () => setEnabled(shouldEnableEffect());
+    check(); // synchronous first check
+
+    const mqls = Object.values(QUERIES).map(q => {
+      const mql = window.matchMedia(q);
+      mql.addEventListener('change', check);
+      return mql;
+    });
+
+    return () => mqls.forEach(mql => mql.removeEventListener('change', check));
   }, []);
 
+  // Preload image
   useEffect(() => {
-    if (!enabled) return;
+    if (!src) return;
+    const img = new Image();
+    img.onload = () => setImgLoaded(true);
+    img.onerror = () => console.warn('[IntroZoomOverlay] Failed to load:', src);
+    img.src = src;
+  }, [src]);
+
+  // GSAP — only when confirmed enabled AND image ready
+  useEffect(() => {
+    if (enabled !== true || !imgLoaded) return;
+
     const wrap = wrapRef.current;
     const bg = bgRef.current;
+    if (!wrap || !bg) return;
+
+    document.body.classList.add('intro-active');
 
     const ctx = gsap.context(() => {
-      // Use a single timeline with pin + scrub so both zoom and fade are synced
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: wrap,
@@ -35,49 +63,54 @@ const IntroZoomOverlay = ({ src, alt = 'Intro' }) => {
           scrub: 1,
           pin: true,
           anticipatePin: 1,
-          markers: false,
-          onLeave: () => {
-            document.body.classList.remove('intro-active');
-          },
+          onEnter: () => document.body.classList.add('intro-active'),
+          onLeave: () => document.body.classList.remove('intro-active'),
+          onEnterBack: () => document.body.classList.add('intro-active'),
+          onLeaveBack: () => document.body.classList.remove('intro-active'),
         },
       });
 
-      // Animate background size to create a true zoom without transparency gaps
       tl.fromTo(
         bg,
-        { backgroundSize: '100% 100%' },
-        { backgroundSize: '800% 800%', ease: 'none' },
+        { scale: 1, transformOrigin: '50% 50%' },
+        { scale: 2.5, ease: 'none' },
         0
       );
-    }, wrap);
+    });
 
-    return () => ctx.revert();
-  }, [enabled]);
+    const id = setTimeout(() => ScrollTrigger.refresh(), 50);
 
-  // No image load listener needed for background div; still refresh once
-  useEffect(() => {
-    if (!enabled) return;
-    try { ScrollTrigger.refresh(); } catch (_) {}
     return () => {
+      clearTimeout(id);
+      ctx.revert();
       document.body.classList.remove('intro-active');
     };
-  }, [enabled]);
+  }, [enabled, imgLoaded]);
 
-  if (!enabled) return null;
+  // ✅ Render nothing until media query check has resolved
+  // This prevents the background div from painting before we know if it should show
+  if (enabled === 'pending' || enabled === false || !src) return null;
 
   return (
-    <section ref={wrapRef} className="intro-zoom-wrap" aria-label="Intro zoom image">
+    <section
+      ref={wrapRef}
+      className="intro-zoom-wrap"
+      aria-label="Intro zoom image"
+    >
       <div
         ref={bgRef}
         className="intro-zoom-bg"
         role="img"
         aria-label={alt}
-        style={{ backgroundImage: `url(${src})` }}
+        style={{
+          backgroundImage: `url(${src})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          willChange: 'transform',
+        }}
       />
     </section>
   );
 };
 
 export default IntroZoomOverlay;
-
-

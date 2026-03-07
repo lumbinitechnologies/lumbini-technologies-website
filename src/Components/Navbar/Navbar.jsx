@@ -1,16 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../../services/supabase";
+import { useAuth } from "../../context/AuthContext";
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout, loading: authLoading } = useAuth();
 
   const [isSticky, setIsSticky] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
   const userMenuRef = useRef(null);
@@ -25,10 +26,9 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      setUser(null);
-      setIsAdmin(false);
       setUserMenuOpen(false);
-      await supabase.auth.signOut();
+      setIsAdmin(false);
+      await logout();
     } catch (err) {
       console.error("Logout error:", err);
     } finally {
@@ -57,32 +57,15 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Auth state
+  // Admin state based on current authenticated user
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-        checkAdmin(session.user.email);
-      } else {
-        setUser(null);
-        setIsAdmin(false);
-      }
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_OUT" || !session?.user) {
-          setUser(null);
-          setIsAdmin(false);
-        } else if (session?.user) {
-          setUser(session.user);
-          await checkAdmin(session.user.email);
-        }
-      },
-    );
-
-    return () => listener.subscription.unsubscribe();
-  }, []);
+    if (authLoading) return;
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    checkAdmin(user.email);
+  }, [user, authLoading]);
 
   // Close on route change
   useEffect(() => {

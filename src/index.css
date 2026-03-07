@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil:opsz,wght@10..72,100..900&family=Orbitron:wght@400..900&family=Poppins:wght@400;500;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil:opsz,wght@10..72,100..900&family=Orbitron:wght@400..900&family=Poppins:wght@400;500;700&display=swap");
 
 * {
   margin: 0;
@@ -7,10 +7,27 @@
   font-family: "Orbitron", sans-serif;
 }
 
-html, body {
+/* ── STICKY FOOTER FIX ───────────────────────────────────────────────────────
+   Full chain required: html → body → #root → App div → main (flex:1)
+   All four levels must be set or the footer won't reach the bottom.
+────────────────────────────────────────────────────────────────────────────── */
+html {
+  min-height: 100%;
+}
+
+html,
+body {
   background-color: #000; /* Prevent white flash on mobile paint */
   overscroll-behavior: none; /* Avoid overscroll glow */
 }
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+/* ─────────────────────────────────────────────────────────────────────────── */
+
 /* Intro zoom overlay */
 /* Loader LT */
 .loader-lt-wrap {
@@ -21,7 +38,11 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.92), rgba(0,0,0,0.98));
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.92),
+    rgba(0, 0, 0, 0.98)
+  );
   z-index: 3000;
 }
 
@@ -29,7 +50,7 @@ html, body {
   position: relative;
   width: 120px;
   height: 120px;
-  filter: drop-shadow(0 0 12px rgba(250,204,21,0.25));
+  filter: drop-shadow(0 0 12px rgba(250, 204, 21, 0.25));
 }
 
 .loader-lt .lt-l,
@@ -87,13 +108,24 @@ html, body {
 }
 
 @keyframes ltPulse {
-  0%, 100% { filter: brightness(1); transform: scale(1); }
-  50% { filter: brightness(1.3); transform: scale(1.03); }
+  0%,
+  100% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+  50% {
+    filter: brightness(1.3);
+    transform: scale(1.03);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .loader-lt .lt-l, .loader-lt .lt-t { animation: none; }
+  .loader-lt .lt-l,
+  .loader-lt .lt-t {
+    animation: none;
+  }
 }
+
 .intro-zoom-wrap {
   position: fixed;
   top: 0;
@@ -101,8 +133,8 @@ html, body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: transparent; /* let site background show through transparent areas */
-  z-index: 2; /* ensure above background effects but below navbar (navbar hidden during intro) */
+  background: transparent;
+  z-index: 2;
 }
 
 .intro-zoom-bg {
@@ -111,17 +143,18 @@ html, body {
   background-position: center;
   background-repeat: no-repeat;
   background-size: 100% 100%;
-  background-color: transparent; /* ensure no fill behind image */
+  background-color: transparent;
   will-change: background-size;
 }
 
 body {
-  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
-              url('assets/ltw.jpg') no-repeat center center fixed;
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+    url("assets/ltw.jpg") no-repeat center center fixed;
   background-size: cover;
   min-height: 100vh;
   color: rgb(4, 4, 4);
-  overflow-x: hidden; /* Prevent sideways scroll causing white edges */
+  overflow-x: hidden;
 }
 
 a {
@@ -131,45 +164,52 @@ a {
 /* Mobile devices in portrait mode */
 @media (max-width: 768px) and (orientation: portrait) {
   body {
-    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
-                url('assets/ltw.portrait.jpg') no-repeat center center fixed;
+    background:
+      linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+      url("assets/ltw.portrait.jpg") no-repeat center center fixed;
     background-size: cover;
-    background-attachment: scroll; /* iOS Safari: avoid fixed to prevent flicker */
+    background-attachment: scroll;
   }
 }
 
-/* Fallback for other small screens (landscape or small tablets) */
+/* Fallback for other small screens */
 @media (max-width: 1024px) {
   body {
-    background-attachment: scroll; /* Ensure no fixed backgrounds on mobile */
+    background-attachment: scroll;
   }
 }
 
-/* Mouse follower glow - hidden on small screens */
+/* Mouse follower glow */
 .cursor-glow {
   position: fixed;
   top: 0;
   left: 0;
   width: 320px;
   height: 320px;
-  margin-left: -160px; /* center on cursor */
-  margin-top: -160px;  /* center on cursor */
+  margin-left: -160px;
+  margin-top: -160px;
   pointer-events: none;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(250, 204, 21, 0.25), rgba(250, 204, 21, 0) 70%);
+  background: radial-gradient(
+    closest-side,
+    rgba(250, 204, 21, 0.25),
+    rgba(250, 204, 21, 0) 70%
+  );
   filter: blur(20px);
   mix-blend-mode: screen;
   z-index: 1;
 }
 
 @media (max-width: 768px) {
-  .cursor-glow { display: none; }
+  .cursor-glow {
+    display: none;
+  }
 }
 
 /* Custom cursor visuals (desktop only) */
 @media (min-width: 769px) {
   body {
-    cursor: none; /* hide system cursor on desktop only */
+    cursor: none;
   }
   .cursor-dot {
     position: fixed;
@@ -193,7 +233,10 @@ a {
     z-index: 9999;
     filter: blur(0.2px);
   }
-  a, button, .card, .dropdown-trigger {
+  a,
+  button,
+  .card,
+  .dropdown-trigger {
     cursor: none;
   }
 }

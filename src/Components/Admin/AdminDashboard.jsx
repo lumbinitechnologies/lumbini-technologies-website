@@ -144,9 +144,9 @@ const buildOfferLetterPDF = (app) => {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const W = 210;
   const H = 297;
-  const ML = 20; // margin left
-  const MR = 20; // margin right
-  const CW = W - ML - MR; // content width = 170mm
+  const ML = 20;
+  const MR = 20;
+  const CW = W - ML - MR;
   const FOOTER_Y = H - 20;
 
   const issueDate = new Date().toLocaleDateString("en-IN", {
@@ -158,21 +158,16 @@ const buildOfferLetterPDF = (app) => {
     .slice(-4)
     .padStart(4, "0")}`;
 
-  // ─── LEFT BLUE SIDEBAR ────────────────────────────────────────────────────
   doc.setFillColor(22, 49, 120);
   doc.rect(0, 0, 8, H, "F");
-
-  // ─── HEADER BAND ─────────────────────────────────────────────────────────
   doc.setFillColor(22, 49, 120);
   doc.rect(0, 0, W, 42, "F");
 
-  // Company name
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
   doc.setTextColor(255, 255, 255);
   doc.text("LUMBINI TECHNOLOGIES PVT. LTD.", W / 2, 18, { align: "center" });
 
-  // Tagline
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(180, 210, 255);
@@ -183,30 +178,25 @@ const buildOfferLetterPDF = (app) => {
     { align: "center" },
   );
 
-  // Thin separator inside header
   doc.setDrawColor(100, 140, 220);
   doc.setLineWidth(0.3);
   doc.line(ML, 31, W - MR, 31);
 
-  // Document label inside header
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9.5);
   doc.setTextColor(220, 235, 255);
   doc.text("INTERNSHIP OFFER LETTER", W / 2, 38, { align: "center" });
 
-  // ─── GOLD ACCENT LINE ────────────────────────────────────────────────────
   doc.setDrawColor(218, 165, 32);
   doc.setLineWidth(1);
   doc.line(ML, 45, W - MR, 45);
 
-  // ─── REF + DATE ROW ──────────────────────────────────────────────────────
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(100, 100, 100);
   doc.text(`Ref: ${refNo}`, ML, 53);
   doc.text(`Date: ${issueDate}`, W - MR, 53, { align: "right" });
 
-  // ─── ADDRESSEE BLOCK ─────────────────────────────────────────────────────
   let y = 63;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10.5);
@@ -234,7 +224,6 @@ const buildOfferLetterPDF = (app) => {
   }
   y += 5;
 
-  // ─── SUBJECT LINE ────────────────────────────────────────────────────────
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(22, 49, 120);
@@ -252,14 +241,12 @@ const buildOfferLetterPDF = (app) => {
   );
   y += 9;
 
-  // ─── SALUTATION ──────────────────────────────────────────────────────────
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(20, 20, 20);
   doc.text(`Dear ${(app.name || "Candidate").split(" ")[0]},`, ML, y);
   y += 8;
 
-  // ─── OPENING PARAGRAPH ───────────────────────────────────────────────────
   const para1 = `We are pleased to offer you an internship position at Lumbini Technologies Private Limited. After reviewing your application and profile, we are confident you will be a valuable addition to our team. This letter sets out the terms of your internship with us.`;
   const lines1 = doc.splitTextToSize(para1, CW);
   doc.setFontSize(10);
@@ -269,12 +256,10 @@ const buildOfferLetterPDF = (app) => {
   });
   y += 5;
 
-  // ─── DETAILS TABLE (clean grid) ───────────────────────────────────────────
   const TABLE_X = ML;
   const TABLE_W = CW;
-  const COL1 = 52; // label column width
+  const COL1 = 52;
   const ROW_H = 9;
-
   const rows = [
     ["Position", "Software Engineer Intern"],
     ["Department", "Engineering & Product"],
@@ -284,19 +269,14 @@ const buildOfferLetterPDF = (app) => {
     ["Stipend", "As per internship policy"],
     ["Start Date", "As communicated separately"],
   ];
-
   const TABLE_H = rows.length * ROW_H + 12;
 
-  // Table background
   doc.setFillColor(246, 248, 254);
   doc.setDrawColor(210, 220, 245);
   doc.setLineWidth(0.3);
   doc.roundedRect(TABLE_X, y, TABLE_W, TABLE_H, 2, 2, "FD");
-
-  // Table heading
   doc.setFillColor(22, 49, 120);
   doc.roundedRect(TABLE_X, y, TABLE_W, 10, 2, 2, "F");
-  // Overwrite bottom corners so it merges with table
   doc.setFillColor(22, 49, 120);
   doc.rect(TABLE_X, y + 5, TABLE_W, 5, "F");
   doc.setFont("helvetica", "bold");
@@ -308,36 +288,28 @@ const buildOfferLetterPDF = (app) => {
 
   let ry = y + 14;
   rows.forEach(([key, val], i) => {
-    // Alternate row shade
     if (i % 2 === 1) {
       doc.setFillColor(237, 241, 252);
       doc.rect(TABLE_X + 0.5, ry - 5.5, TABLE_W - 1, ROW_H, "F");
     }
-    // Vertical divider
     doc.setDrawColor(210, 220, 245);
     doc.setLineWidth(0.3);
     doc.line(TABLE_X + COL1, ry - 5.5, TABLE_X + COL1, ry + 3.5);
-
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     doc.setTextColor(50, 60, 100);
     doc.text(key, TABLE_X + 4, ry);
-
     doc.setFont("helvetica", "normal");
     doc.setTextColor(25, 25, 25);
     doc.text(val, TABLE_X + COL1 + 4, ry);
-
-    // Horizontal row divider (skip last)
     if (i < rows.length - 1) {
       doc.setDrawColor(215, 225, 248);
       doc.line(TABLE_X + 0.5, ry + 3.5, TABLE_X + TABLE_W - 0.5, ry + 3.5);
     }
     ry += ROW_H;
   });
-
   y += TABLE_H + 8;
 
-  // ─── RESPONSIBILITIES ─────────────────────────────────────────────────────
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(22, 49, 120);
@@ -367,7 +339,6 @@ const buildOfferLetterPDF = (app) => {
   });
   y += 4;
 
-  // ─── TERMS ───────────────────────────────────────────────────────────────
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(22, 49, 120);
@@ -397,7 +368,6 @@ const buildOfferLetterPDF = (app) => {
   });
   y += 5;
 
-  // ─── CLOSING PARAGRAPH ───────────────────────────────────────────────────
   const closing = `We warmly welcome you to Lumbini Technologies. Please sign and return a copy of this letter within 3 working days as your formal acceptance. For any queries, reach us at hr@lumbinitechnologies.onmicrosoft.com or +91 9848294006.`;
   const closingLines = doc.splitTextToSize(closing, CW);
   doc.setFont("helvetica", "normal");
@@ -409,24 +379,19 @@ const buildOfferLetterPDF = (app) => {
   });
   y += 8;
 
-  // ─── SIGNATURE BLOCK ─────────────────────────────────────────────────────
   const SIG_RIGHT = W - MR;
   const SIG_RIGHT_START = W / 2 + 10;
-
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9.5);
   doc.setTextColor(20, 20, 20);
   doc.text("For Lumbini Technologies Pvt. Ltd.", ML, y);
   doc.text("Accepted by Intern", SIG_RIGHT, y, { align: "right" });
   y += 14;
-
-  // Signature lines
   doc.setDrawColor(22, 49, 120);
   doc.setLineWidth(0.5);
   doc.line(ML, y, ML + 58, y);
   doc.line(SIG_RIGHT_START, y, SIG_RIGHT, y);
   y += 5;
-
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9.5);
   doc.setTextColor(22, 49, 120);
@@ -435,7 +400,6 @@ const buildOfferLetterPDF = (app) => {
     align: "right",
   });
   y += 5;
-
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(70, 70, 70);
@@ -444,14 +408,11 @@ const buildOfferLetterPDF = (app) => {
   y += 5;
   doc.text("Lumbini Technologies", ML, y);
 
-  // ─── FOOTER BAND ─────────────────────────────────────────────────────────
   doc.setFillColor(13, 32, 96);
   doc.rect(0, FOOTER_Y, W, 20, "F");
-
   doc.setDrawColor(80, 110, 200);
   doc.setLineWidth(0.4);
   doc.line(W / 2 + 5, FOOTER_Y + 3, W / 2 + 5, FOOTER_Y + 17);
-
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7.5);
   doc.setTextColor(200, 220, 255);
@@ -460,7 +421,6 @@ const buildOfferLetterPDF = (app) => {
   doc.setFontSize(7);
   doc.setTextColor(160, 190, 240);
   doc.text("Siddhartha Nagar, Vijayawada – 520010", 12, FOOTER_Y + 14);
-
   const fRX = W / 2 + 12;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
@@ -662,13 +622,22 @@ const AdminDashboard = () => {
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .adm { min-height: 100vh; background: #030508; color: #e2e8f0; font-family: 'Syne', sans-serif; }
+        /* ── FIX: padding-top pushes content below the navbar ── */
+        .adm {
+          min-height: 100vh;
+          background: #030508;
+          color: #e2e8f0;
+          font-family: 'Syne', sans-serif;
+          padding-top: 70px;
+        }
 
+        /* ── FIX: sticky topbar sticks below the navbar ── */
         .adm-topbar {
           display: flex; align-items: center; justify-content: space-between;
           padding: 18px 36px; border-bottom: 1px solid #0f1923;
-          background: #030508; position: sticky; top: 0; z-index: 50;
+          background: #030508; position: sticky; top: 70px; z-index: 50;
         }
+
         .adm-logo { display: flex; align-items: center; gap: 10px; font-size: 1rem; font-weight: 800; color: #fff; letter-spacing: 0.04em; }
         .adm-logo-dot { width: 10px; height: 10px; border-radius: 50%; background: #facc15; box-shadow: 0 0 10px #facc15aa; animation: pulse 2s infinite; }
         @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(.85)} }
@@ -763,7 +732,9 @@ const AdminDashboard = () => {
 
         @media (max-width:1024px) { .adm-stats{grid-template-columns:repeat(3,1fr)} }
         @media (max-width:768px) {
-          .adm-body{padding:20px 16px} .adm-topbar{padding:14px 16px}
+          .adm { padding-top: 60px; }
+          .adm-topbar { top: 60px; padding:14px 16px; }
+          .adm-body{padding:20px 16px}
           .adm-stats{grid-template-columns:repeat(2,1fr)} .adm-drawer{width:100%}
           .adm-table th:nth-child(3), .adm-table td:nth-child(3){display:none}
         }
@@ -1024,7 +995,6 @@ const AdminDashboard = () => {
                   </div>
                 )}
 
-                {/* Status actions */}
                 <div className="adm-drawer-actions">
                   <button
                     className="adm-action-btn btn-shortlist"
@@ -1049,7 +1019,6 @@ const AdminDashboard = () => {
                   </button>
                 </div>
 
-                {/* Document actions */}
                 <div className="adm-docs-divider">Generate Documents</div>
                 <div className="adm-drawer-actions" style={{ marginTop: 0 }}>
                   <button

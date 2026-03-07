@@ -1,8 +1,9 @@
-import React, { lazy, Suspense, useEffect } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
+  Navigate,
   useLocation,
 } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -36,22 +37,6 @@ const MyApplications = lazy(() => import("./Components/Users/MyApplications"));
 const UserDashboard = lazy(() => import("./Components/Users/UserDashboard"));
 const AdminDashboard = lazy(() => import("./Components/Admin/AdminDashboard"));
 
-// ── Auth-exempt routes ────────────────────────────────────────────────────────
-const PUBLIC_PATHS = [
-  "/",
-  "/about",
-  "/gallery",
-  "/servicepage",
-  "/career",
-  "/contact",
-  "/products",
-  "/login",
-  "/signup",
-  "/skillarc",
-];
-
-const isPublicPath = (path) => PUBLIC_PATHS.includes(path.toLowerCase());
-
 // ── Scroll to top on route change ─────────────────────────────────────────────
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -73,6 +58,89 @@ const PageWrapper = ({ children }) => (
   </motion.div>
 );
 
+// ── Loader — matches UserDashboard style ──────────────────────────────────────
+const PageLoader = () => {
+  const texts = ["Initializing...", "Loading modules...", "Almost ready..."];
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % texts.length);
+    }, 800);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <>
+      <style>{`
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+        @keyframes fadeSwap {
+          0%   { opacity: 0; transform: translateY(6px); }
+          20%  { opacity: 1; transform: translateY(0); }
+          80%  { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(-6px); }
+        }
+        .pl-text { animation: fadeSwap 0.8s ease forwards; }
+        .pl-cursor {
+          display: inline-block;
+          width: 7px; height: 13px;
+          background: #facc15;
+          margin-left: 4px;
+          vertical-align: middle;
+          animation: blink 1s step-start infinite;
+        }
+        .pl-dot {
+          width: 6px; height: 6px;
+          border-radius: 50%;
+          background: #facc15;
+        }
+      `}</style>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          gap: "12px",
+        }}
+      >
+        {/* Bouncing dots */}
+        <div style={{ display: "flex", gap: "6px", marginBottom: "4px" }}>
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="pl-dot"
+              style={{
+                opacity: 0.3,
+                animation: `blink 1.2s ease-in-out ${i * 0.2}s infinite`,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Cycling status text */}
+        <div
+          key={index}
+          className="pl-text"
+          style={{
+            color: "#facc15",
+            fontFamily: "'DM Mono', monospace",
+            fontSize: 13,
+            letterSpacing: "0.05em",
+          }}
+        >
+          {texts[index]}
+          <span className="pl-cursor" />
+        </div>
+      </div>
+    </>
+  );
+};
+
 // ── Animated routes ───────────────────────────────────────────────────────────
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -80,27 +148,120 @@ const AnimatedRoutes = () => {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         {/* ── Public ── */}
-        <Route path="/" element={<PageWrapper><Home /></PageWrapper>} />
-        <Route path="/About" element={<PageWrapper><About /></PageWrapper>} />
-        <Route path="/Gallery" element={<PageWrapper><Gallery /></PageWrapper>} />
-        <Route path="/ServicePage" element={<PageWrapper><ServicePage /></PageWrapper>} />
-        <Route path="/Career" element={<PageWrapper><Career /></PageWrapper>} />
-        <Route path="/Contact" element={<PageWrapper><Contact /></PageWrapper>} />
-        <Route path="/Products" element={<PageWrapper><Products /></PageWrapper>} />
+        <Route
+          path="/"
+          element={
+            <PageWrapper>
+              <Home />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/About"
+          element={
+            <PageWrapper>
+              <About />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/Gallery"
+          element={
+            <PageWrapper>
+              <Gallery />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/ServicePage"
+          element={
+            <PageWrapper>
+              <ServicePage />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/Career"
+          element={
+            <PageWrapper>
+              <Career />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/Contact"
+          element={
+            <PageWrapper>
+              <Contact />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/Products"
+          element={
+            <PageWrapper>
+              <Products />
+            </PageWrapper>
+          }
+        />
+
+        {/* Case-insensitive aliases */}
+        <Route path="/about" element={<Navigate to="/About" replace />} />
+        <Route path="/gallery" element={<Navigate to="/Gallery" replace />} />
+        <Route
+          path="/servicepage"
+          element={<Navigate to="/ServicePage" replace />}
+        />
+        <Route path="/career" element={<Navigate to="/Career" replace />} />
+        <Route path="/contact" element={<Navigate to="/Contact" replace />} />
+        <Route path="/products" element={<Navigate to="/Products" replace />} />
 
         {/* ── Auth ── */}
-        <Route path="/Login" element={<PageWrapper><Login /></PageWrapper>} />
-        <Route path="/signup" element={<PageWrapper><Signup /></PageWrapper>} />
+        <Route
+          path="/Login"
+          element={
+            <PageWrapper>
+              <Login />
+            </PageWrapper>
+          }
+        />
+        <Route path="/login" element={<Navigate to="/Login" replace />} />
+        <Route
+          path="/signup"
+          element={
+            <PageWrapper>
+              <Signup />
+            </PageWrapper>
+          }
+        />
 
         {/* ── Internship ── */}
         <Route
           path="/internship-application"
-          element={<PageWrapper><InternshipApplication /></PageWrapper>}
+          element={
+            <PageWrapper>
+              <InternshipApplication />
+            </PageWrapper>
+          }
         />
 
         {/* ── User ── */}
-        <Route path="/dashboard" element={<PageWrapper><UserDashboard /></PageWrapper>} />
-        <Route path="/my-applications" element={<PageWrapper><MyApplications /></PageWrapper>} />
+        <Route
+          path="/dashboard"
+          element={
+            <PageWrapper>
+              <UserDashboard />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/my-applications"
+          element={
+            <PageWrapper>
+              <MyApplications />
+            </PageWrapper>
+          }
+        />
 
         {/* ── Admin ── */}
         <Route
@@ -122,7 +283,9 @@ const AnimatedRoutes = () => {
           path="*"
           element={
             <PageWrapper>
-              <div style={{ color: "white", textAlign: "center", padding: "3rem" }}>
+              <div
+                style={{ color: "white", textAlign: "center", padding: "3rem" }}
+              >
                 Page Not Found
               </div>
             </PageWrapper>
@@ -138,21 +301,27 @@ const App = () => {
   return (
     <Router basename={import.meta.env.BASE_URL}>
       <AuthProvider>
-        <ScrollToTop />
-        <MouseFollower />
-        <MouseParallax />
-        <CustomCursor />
-        <Navbar />
-        <Suspense
-          fallback={
-            <div style={{ color: "white", textAlign: "center", padding: "2rem" }}>
-              Loading...
-            </div>
-          }
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            minHeight: "100vh",
+          }}
         >
-          <AnimatedRoutes />
-        </Suspense>
-        <Footer />
+          <ScrollToTop />
+          <MouseFollower />
+          <MouseParallax />
+          <CustomCursor />
+          <Navbar />
+
+          <main style={{ flex: 1 }}>
+            <Suspense fallback={<PageLoader />}>
+              <AnimatedRoutes />
+            </Suspense>
+          </main>
+
+          <Footer />
+        </div>
       </AuthProvider>
     </Router>
   );
