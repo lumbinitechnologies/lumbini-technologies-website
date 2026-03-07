@@ -66,9 +66,10 @@ async function generatePdfBytes(params: {
   const width = page.getWidth();
   let y = page.getHeight() - margin;
 
-  const title = params.type === "offer"
-    ? "Internship Offer Letter"
-    : "Internship Agreement";
+  const title =
+    params.type === "offer"
+      ? "Internship Offer Letter"
+      : "Internship Agreement";
 
   const company = "Lumbini Technologies";
   const dateStr = new Date().toLocaleDateString("en-IN", {
@@ -244,7 +245,8 @@ Deno.serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
 
     const authHeader = req.headers.get("Authorization") || "";
-    if (!authHeader) return json(401, { error: "Missing Authorization header" });
+    if (!authHeader)
+      return json(401, { error: "Missing Authorization header" });
 
     const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
@@ -255,14 +257,17 @@ Deno.serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    const body = await req.json().catch(() => null) as
-      | { applicationId?: string | number; type?: LetterType }
-      | null;
+    const body = (await req.json().catch(() => null)) as {
+      applicationId?: string | number;
+      type?: LetterType;
+    } | null;
 
     const applicationId = body?.applicationId;
     const type = body?.type;
     if (!applicationId || (type !== "offer" && type !== "agreement")) {
-      return json(400, { error: "Invalid body. Expect { applicationId, type }" });
+      return json(400, {
+        error: "Invalid body. Expect { applicationId, type }",
+      });
     }
 
     const { data: userData, error: userErr } = await userClient.auth.getUser();
@@ -325,9 +330,10 @@ Deno.serve(async (req) => {
     const fromEmail = Deno.env.get("FROM_EMAIL");
 
     if (resendKey && fromEmail) {
-      const subject = type === "offer"
-        ? "Your Internship Offer Letter"
-        : "Your Internship Agreement";
+      const subject =
+        type === "offer"
+          ? "Your Internship Offer Letter"
+          : "Your Internship Agreement";
 
       const html = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111">
@@ -365,4 +371,3 @@ Deno.serve(async (req) => {
     return json(500, { error: e instanceof Error ? e.message : String(e) });
   }
 });
-

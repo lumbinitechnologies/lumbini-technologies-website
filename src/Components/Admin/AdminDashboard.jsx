@@ -493,13 +493,11 @@ const uploadAndSaveDocument = async (
     .from("documents")
     .getPublicUrl(path);
   const fileUrl = urlData?.publicUrl;
-  await supabase
-    .from("documents")
-    .upsert({
-      intern_id: internId,
-      document_type: documentType,
-      file_url: fileUrl,
-    });
+  await supabase.from("documents").upsert({
+    intern_id: internId,
+    document_type: documentType,
+    file_url: fileUrl,
+  });
   return fileUrl;
 };
 

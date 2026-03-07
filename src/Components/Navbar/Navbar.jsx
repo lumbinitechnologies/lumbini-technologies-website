@@ -36,7 +36,6 @@ const Navbar = () => {
     }
   };
 
-  // ✅ Direct check — no external service file needed
   const checkAdmin = async (email) => {
     try {
       const { data } = await supabase
@@ -50,14 +49,12 @@ const Navbar = () => {
     }
   };
 
-  // Sticky on scroll
   useEffect(() => {
     const handleScroll = () => setIsSticky(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Admin state based on current authenticated user
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -67,12 +64,10 @@ const Navbar = () => {
     checkAdmin(user.email);
   }, [user, authLoading]);
 
-  // Close on route change
   useEffect(() => {
     closeMenu();
   }, [location]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
@@ -136,7 +131,7 @@ const Navbar = () => {
         .dropdown-trigger:hover { color: #facc15; }
         .dropdown-menu {
           position: absolute;
-          top: 38px;
+          top: 28px; /* ← reduced from 38px to close the gap */
           left: 0;
           background: #111;
           border: 1px solid #222;

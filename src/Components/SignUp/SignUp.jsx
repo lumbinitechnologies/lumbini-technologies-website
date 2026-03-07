@@ -2,6 +2,101 @@ import React, { useState } from "react";
 import { supabase } from "../../services/supabase";
 import { Link, useNavigate } from "react-router-dom";
 
+// Toast notification component
+const Toast = ({ message, type, onClose }) => {
+  if (!message) return null;
+
+  const styles = {
+    wrapper: {
+      position: "fixed",
+      top: "1.5rem",
+      right: "1.5rem",
+      zIndex: 9999,
+      animation: "slideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+    },
+    toast: {
+      display: "flex",
+      alignItems: "flex-start",
+      gap: "0.75rem",
+      padding: "1rem 1.25rem",
+      borderRadius: "12px",
+      maxWidth: "360px",
+      boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
+      backdropFilter: "blur(16px)",
+      border:
+        type === "error"
+          ? "1px solid rgba(239,68,68,0.4)"
+          : "1px solid rgba(74,222,128,0.4)",
+      background:
+        type === "error" ? "rgba(30, 10, 10, 0.85)" : "rgba(10, 30, 15, 0.85)",
+    },
+    icon: {
+      fontSize: "1.2rem",
+      marginTop: "1px",
+      flexShrink: 0,
+    },
+    body: {
+      flex: 1,
+    },
+    title: {
+      fontWeight: 700,
+      fontSize: "0.88rem",
+      color: type === "error" ? "#f87171" : "#4ade80",
+      marginBottom: "0.2rem",
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    },
+    text: {
+      fontSize: "0.82rem",
+      color: "rgba(255,255,255,0.72)",
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+      lineHeight: 1.45,
+    },
+    close: {
+      background: "none",
+      border: "none",
+      color: "rgba(255,255,255,0.4)",
+      cursor: "pointer",
+      fontSize: "1rem",
+      padding: "0",
+      lineHeight: 1,
+      flexShrink: 0,
+      transition: "color 0.2s",
+    },
+  };
+
+  return (
+    <>
+      <style>{`
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateX(40px) scale(0.95); }
+          to   { opacity: 1; transform: translateX(0)   scale(1);    }
+        }
+      `}</style>
+      <div style={styles.wrapper}>
+        <div style={styles.toast}>
+          <span style={styles.icon}>{type === "error" ? "⚠️" : "✅"}</span>
+          <div style={styles.body}>
+            <div style={styles.title}>
+              {type === "error" ? "Error" : "Success"}
+            </div>
+            <div style={styles.text}>{message}</div>
+          </div>
+          <button
+            style={styles.close}
+            onClick={onClose}
+            onMouseEnter={(e) => (e.target.style.color = "#fff")}
+            onMouseLeave={(e) =>
+              (e.target.style.color = "rgba(255,255,255,0.4)")
+            }
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+    </>
+  );
+};
+
 const Signup = () => {
   const navigate = useNavigate();
 
@@ -11,16 +106,26 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Toast state
+  const [toast, setToast] = useState({ message: "", type: "" });
+
+  const showToast = (message, type = "error") => {
+    setToast({ message, type });
+    if (type === "success") {
+      setTimeout(() => setToast({ message: "", type: "" }), 4000);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      showToast("Passwords do not match. Please re-enter them.", "error");
       return;
     }
 
     if (password.length < 6) {
-      alert("Password must be at least 6 characters.");
+      showToast("Password must be at least 6 characters long.", "error");
       return;
     }
 
@@ -31,17 +136,21 @@ const Signup = () => {
       password,
       options: {
         data: { full_name: fullName },
+        emailRedirectTo: "https://lumbinitechnologies.com/login",
       },
     });
 
     if (error) {
-      alert(error.message);
+      showToast(error.message, "error");
       setLoading(false);
       return;
     }
 
-    alert("Account created! Please check your email to confirm your account.");
-    navigate("/Login");
+    showToast(
+      "Account created! Please check your email to confirm your account.",
+      "success",
+    );
+    setTimeout(() => navigate("/Login"), 2500);
     setLoading(false);
   };
 
@@ -190,6 +299,13 @@ const Signup = () => {
           }
         }
       `}</style>
+
+      {/* Toast notification */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: "", type: "" })}
+      />
 
       <div className="signup-container">
         <form onSubmit={handleSubmit} className="signup-form">
