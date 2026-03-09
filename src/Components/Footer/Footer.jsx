@@ -1,51 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Mail,
-  Phone,
-  MapPin,
-  Linkedin,
-  Instagram,
-  ArrowUp,
-} from "lucide-react";
+import { Mail, Phone, MapPin, Linkedin, Instagram, ArrowUp } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const styles = `
-  /* ─── Layout Fix: Sticky Footer ─────────────────────────────────────────── */
-  /* Add this to your global CSS / index.css / App.css */
-  /*
-  html, body, #root {
-    min-height: 100vh;
-  }
-  #root {
-    display: flex;
-    flex-direction: column;
-  }
-  main, .page-content {
-    flex: 1;
-  }
-  */
-
-  /* Base footer container */
   .footer {
     background: #000;
     color: #d1d5db;
     padding: 2rem 0;
-    border-top: 1px solid rgba(255,255,255,0.08);
+    border-top: 1px solid rgba(250, 204, 21, 0.12);
     position: relative;
     z-index: 10;
-    /* KEY FIX: ensures footer never floats up when content is loading */
     margin-top: auto;
     flex-shrink: 0;
   }
 
   @media (min-width: 768px) {
-    .footer {
-      padding: 3rem 0;
-    }
+    .footer { padding: 3rem 0; }
   }
 
-  /* Grid layout */
   .footer-grid {
     max-width: 72rem;
     margin: 0 auto;
@@ -54,22 +27,9 @@ const styles = `
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
+  @media (min-width: 640px) { .footer-grid { grid-template-columns: repeat(2, 1fr); gap: 2rem; } }
+  @media (min-width: 768px) { .footer-grid { grid-template-columns: repeat(4, 1fr); gap: 2rem; } }
 
-  @media (min-width: 640px) {
-    .footer-grid { 
-      grid-template-columns: repeat(2, 1fr); 
-      gap: 2rem;
-    }
-  }
-
-  @media (min-width: 768px) {
-    .footer-grid { 
-      grid-template-columns: repeat(4, 1fr); 
-      gap: 2rem;
-    }
-  }
-
-  /* Brand section */
   .footer-brand {
     font-size: 1.125rem;
     font-weight: 800;
@@ -77,12 +37,7 @@ const styles = `
     margin-bottom: 0.5rem;
     line-height: 1.2;
   }
-
-  @media (min-width: 768px) {
-    .footer-brand {
-      font-size: 1.25rem;
-    }
-  }
+  @media (min-width: 768px) { .footer-brand { font-size: 1.25rem; } }
 
   .footer-subtext {
     color: #9ca3af;
@@ -90,18 +45,10 @@ const styles = `
     line-height: 1.5;
     margin-bottom: 0;
   }
+  @media (min-width: 768px) { .footer-subtext { font-size: 0.875rem; } }
 
-  @media (min-width: 768px) {
-    .footer-subtext {
-      font-size: 0.875rem;
-    }
-  }
+  .mb-3 { margin-bottom: 0.75rem !important; }
 
-  .mb-3 {
-    margin-bottom: 0.75rem !important;
-  }
-
-  /* Section titles */
   .footer-title {
     font-size: 1rem;
     color: #fff;
@@ -109,36 +56,13 @@ const styles = `
     margin-bottom: 0.75rem;
     line-height: 1.3;
   }
+  @media (min-width: 768px) { .footer-title { font-size: 1.125rem; } }
 
-  @media (min-width: 768px) {
-    .footer-title {
-      font-size: 1.125rem;
-    }
-  }
+  .footer-list { list-style: none; margin: 0; padding: 0; }
+  .footer-list li { margin-bottom: 0.375rem; line-height: 1.4; }
+  .footer-list li:last-child { margin-bottom: 0; }
+  @media (min-width: 768px) { .footer-list li { margin-bottom: 0.5rem; } }
 
-  /* Lists */
-  .footer-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .footer-list li { 
-    margin-bottom: 0.375rem;
-    line-height: 1.4;
-  }
-
-  .footer-list li:last-child {
-    margin-bottom: 0;
-  }
-
-  @media (min-width: 768px) {
-    .footer-list li { 
-      margin-bottom: 0.5rem;
-    }
-  }
-
-  /* Links */
   .footer-link {
     color: inherit;
     text-decoration: none;
@@ -146,27 +70,17 @@ const styles = `
     transition: color 200ms ease;
     display: inline-block;
   }
-
-  .footer-link:hover {
-    color: #facc15;
-  }
-
+  .footer-link:hover { color: #facc15; }
   .footer-link::after {
     content: "";
     position: absolute;
-    left: 0;
-    bottom: -3px;
-    width: 0;
-    height: 2px;
+    left: 0; bottom: -3px;
+    width: 0; height: 2px;
     background: #facc15;
     transition: width 300ms ease;
   }
+  .footer-link:hover::after { width: 100%; }
 
-  .footer-link:hover::after { 
-    width: 100%; 
-  }
-
-  /* Contact row */
   .footer-contact {
     display: flex;
     align-items: center;
@@ -174,53 +88,28 @@ const styles = `
     color: #d1d5db;
     font-size: 0.8125rem;
   }
+  @media (min-width: 768px) { .footer-contact { font-size: 0.875rem; } }
+  .footer-contact svg { flex-shrink: 0; color: #facc15; }
 
-  @media (min-width: 768px) {
-    .footer-contact {
-      font-size: 0.875rem;
-    }
-  }
+  .newsletter-section { grid-column: 1 / -1; }
+  @media (min-width: 640px) { .newsletter-section { grid-column: auto; } }
 
-  .footer-contact svg {
-    flex-shrink: 0;
-    color: #facc15;
-  }
-
-  /* Newsletter */
-  .newsletter-section {
-    grid-column: 1 / -1;
-  }
-
-  @media (min-width: 640px) {
-    .newsletter-section {
-      grid-column: auto;
-    }
-  }
-
-  .footer-form { 
-    display: flex; 
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-  }
+  .footer-form { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
 
   .footer-input {
     flex: 1;
     padding: 0.5rem 0.75rem;
-    background: rgba(255,255,255,0.04);
+    background: rgba(255, 255, 255, 0.04);
     border-radius: 0.375rem;
     color: #fff;
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid rgba(250, 204, 21, 0.2);
     outline: none;
     transition: box-shadow 150ms ease, border-color 150ms ease;
     font-size: 0.875rem;
   }
-
-  .footer-input::placeholder {
-    color: #9ca3af;
-  }
-
+  .footer-input::placeholder { color: #9ca3af; }
   .footer-input:focus {
-    box-shadow: 0 0 0 3px rgba(250,204,21,0.1);
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.1);
     border-color: #facc15;
   }
 
@@ -236,19 +125,11 @@ const styles = `
     transition: background-color 150ms ease, transform 100ms ease;
     white-space: nowrap;
   }
+  .footer-btn:hover { background: #fde047; transform: translateY(-1px); }
+  .footer-btn:active { transform: translateY(0); }
 
-  .footer-btn:hover {
-    background: #fde047;
-    transform: translateY(-1px);
-  }
-
-  .footer-btn:active {
-    transform: translateY(0);
-  }
-
-  /* Bottom bar */
   .footer-bottom {
-    border-top: 1px solid rgba(255,255,255,0.08);
+    border-top: 1px solid rgba(250, 204, 21, 0.08);
     margin-top: 1.5rem;
     padding: 1rem 1rem 0;
     max-width: 72rem;
@@ -261,7 +142,6 @@ const styles = `
     justify-content: space-between;
     text-align: center;
   }
-
   @media (min-width: 768px) {
     .footer-bottom {
       margin-top: 2.5rem;
@@ -270,92 +150,46 @@ const styles = `
       text-align: left;
     }
   }
+  .footer-bottom p { margin: 0; font-size: 0.875rem; color: #9ca3af; }
 
-  .footer-bottom p {
-    margin: 0;
-    font-size: 0.875rem;
+  .footer-bottom-links { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+  @media (min-width: 768px) { .footer-bottom-links { justify-content: flex-start; } }
+  .footer-bottom-links .footer-link { font-size: 0.875rem; color: #9ca3af; }
+  .footer-bottom-links .footer-link:hover { color: #facc15; }
+
+  .footer-socials { display: flex; gap: 0.75rem; justify-content: center; }
+  .footer-socials a {
     color: #9ca3af;
-  }
-
-  .footer-bottom-links {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  @media (min-width: 768px) {
-    .footer-bottom-links {
-      justify-content: flex-start;
-    }
-  }
-
-  .footer-bottom-links .footer-link {
-    font-size: 0.875rem;
-    color: #9ca3af;
-  }
-
-  .footer-bottom-links .footer-link:hover {
-    color: #facc15;
-  }
-
-  /* Social icons */
-  .footer-socials { 
-    display: flex; 
-    gap: 0.75rem;
-    justify-content: center;
-  }
-
-  .footer-socials a { 
-    color: #9ca3af; 
     transition: color 150ms ease, transform 150ms ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.04);
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
     text-decoration: none;
   }
-
-  .footer-socials a:hover { 
+  .footer-socials a:hover {
     color: #facc15;
     transform: translateY(-2px);
-    background: rgba(250,204,21,0.1);
+    background: rgba(250, 204, 21, 0.1);
   }
 
-  /* Scroll to top button */
   .scroll-top-btn {
     position: fixed;
-    right: 1.5rem;
-    bottom: 1.5rem;
-    padding: 0.6rem;
-    border-radius: 50%;
-    background: #facc15;
-    color: #000;
-    box-shadow: 0 4px 20px rgba(250,204,21,0.3), 0 0 0 0 rgba(250,204,21,0.4);
-    border: none;
-    cursor: pointer;
-    transition: all 200ms ease;
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
+    right: 1.5rem; bottom: 1.5rem;
+    padding: 0.6rem; border-radius: 50%;
+    background: #facc15; color: #000;
+    box-shadow: 0 4px 20px rgba(250, 204, 21, 0.3), 0 0 0 0 rgba(250, 204, 21, 0.4);
+    border: none; cursor: pointer;
+    transition: all 200ms ease; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px;
     animation: pulse 2s infinite;
   }
-
-  .scroll-top-btn:hover { 
-    box-shadow: 0 6px 25px rgba(250,204,21,0.4), 0 0 0 8px rgba(250,204,21,0.1);
+  .scroll-top-btn:hover {
+    box-shadow: 0 6px 25px rgba(250, 204, 21, 0.4), 0 0 0 8px rgba(250, 204, 21, 0.1);
     transform: translateY(-2px);
     background: #fde047;
   }
-
-  .scroll-top-btn:active {
-    transform: translateY(0);
-  }
+  .scroll-top-btn:active { transform: translateY(0); }
 
   @keyframes pulse {
     0%   { box-shadow: 0 4px 20px rgba(250,204,21,0.3), 0 0 0 0 rgba(250,204,21,0.4); }
@@ -363,7 +197,8 @@ const styles = `
     100% { box-shadow: 0 4px 20px rgba(250,204,21,0.3), 0 0 0 0 rgba(250,204,21,0); }
   }
 
-  /* Responsive */
+  .footer-message { margin-top: 0.5rem; font-size: 0.8125rem; color: #facc15; }
+
   @media (max-width: 639px) {
     .footer { padding: 1.5rem 0; }
     .footer-grid { gap: 1.25rem; }
@@ -382,27 +217,12 @@ const styles = `
     .footer-title { font-size: 0.9375rem; }
     .footer-subtext { font-size: 0.75rem; }
     .footer-contact { font-size: 0.75rem; }
-    .newsletter-section .footer-subtext { font-size: 0.6875rem; margin-bottom: 0.5rem; }
-    .footer-form { margin-top: 0.5rem; }
-    .footer-input { font-size: 0.8125rem; padding: 0.4375rem 0.625rem; }
-    .footer-btn { font-size: 0.8125rem; padding: 0.4375rem 0.875rem; }
-    .footer-bottom { margin-top: 0.75rem; padding: 0.5rem 1rem 0; }
   }
 
-  /* Accessibility */
-  .footer *::selection { background: rgba(250,204,21,0.2); color: #facc15; }
-  .footer-input:focus,
-  .footer-btn:focus,
-  .footer-link:focus,
-  .scroll-top-btn:focus { outline: 2px solid #facc15; outline-offset: 2px; }
+  .footer *::selection { background: rgba(250, 204, 21, 0.2); color: #facc15; }
+  .footer-input:focus, .footer-btn:focus,
+  .footer-link:focus, .scroll-top-btn:focus { outline: 2px solid #facc15; outline-offset: 2px; }
   .footer-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-  .footer-btn:disabled:hover { background: #facc15; transform: none; }
-
-  .footer-message {
-    margin-top: 0.5rem;
-    font-size: 0.8125rem;
-    color: #facc15;
-  }
 `;
 
 export default function Footer() {
@@ -432,17 +252,15 @@ export default function Footer() {
 
   return (
     <>
-      {/* Inject styles once — no external CSS file needed */}
       <style>{styles}</style>
 
       <footer className="footer">
         <div className="footer-grid">
+
           {/* Brand */}
           <div>
             <h2 className="footer-brand">Lumbini Technologies</h2>
-            <p className="footer-subtext">
-              Innovating Technology for a Smarter Future
-            </p>
+            <p className="footer-subtext">Innovating Technology for a Smarter Future</p>
           </div>
 
           {/* Quick Links */}
@@ -450,18 +268,14 @@ export default function Footer() {
             <h3 className="footer-title">Quick Links</h3>
             <ul className="footer-list">
               {[
-                { to: "/", label: "Home" },
-                { to: "/About", label: "About Us" },
+                { to: "/",            label: "Home"     },
+                { to: "/About",       label: "About Us" },
                 { to: "/ServicePage", label: "Services" },
-                { to: "/Products", label: "Products" },
-                { to: "/Career", label: "Careers" },
-                { to: "/Contact", label: "Contact" },
+                { to: "/Products",    label: "Products" },
+                { to: "/Career",      label: "Careers"  },
+                { to: "/Contact",     label: "Contact"  },
               ].map(({ to, label }) => (
-                <li key={to}>
-                  <Link to={to} className="footer-link">
-                    {label}
-                  </Link>
-                </li>
+                <li key={to}><Link to={to} className="footer-link">{label}</Link></li>
               ))}
             </ul>
           </div>
@@ -470,15 +284,9 @@ export default function Footer() {
           <div>
             <h3 className="footer-title">Contact</h3>
             <ul className="footer-list">
-              <li className="footer-contact">
-                <MapPin size={16} /> Vijayawada, India
-              </li>
-              <li className="footer-contact">
-                <Mail size={16} /> lumbini.technologies01@gmail.com
-              </li>
-              <li className="footer-contact">
-                <Phone size={16} /> +91 98482 94006
-              </li>
+              <li className="footer-contact"><MapPin size={16} /> Vijayawada, India</li>
+              <li className="footer-contact"><Mail size={16} /> lumbini.technologies01@gmail.com</li>
+              <li className="footer-contact"><Phone size={16} /> +91 98482 94006</li>
             </ul>
           </div>
 
@@ -486,7 +294,7 @@ export default function Footer() {
           <div className="newsletter-section">
             <h3 className="footer-title">Newsletter</h3>
             <p className="footer-subtext mb-3">
-              Stay updated with our latest solutions & opportunities.
+              Stay updated with our latest solutions &amp; opportunities.
             </p>
             <form className="footer-form" onSubmit={handleSubscribe}>
               <input
@@ -513,26 +321,14 @@ export default function Footer() {
         <div className="footer-bottom">
           <p>© 2025 Lumbini Technologies. All Rights Reserved.</p>
           <div className="footer-bottom-links">
-            <Link to="/PrivacyPolicy" className="footer-link">
-              Privacy Policy
-            </Link>
-            <Link to="/Terms" className="footer-link">
-              Terms & Conditions
-            </Link>
+            <Link to="/privacy-policy" className="footer-link">Privacy Policy</Link>
+            <Link to="/terms-and-conditions" className="footer-link">Terms &amp; Conditions</Link>
           </div>
           <div className="footer-socials">
-            <a
-              href="https://www.linkedin.com/company/lumbini-technologies/?viewAsMember=true"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href="https://www.linkedin.com/company/lumbini-technologies/?viewAsMember=true" target="_blank" rel="noreferrer">
               <Linkedin size={18} />
             </a>
-            <a
-              href="https://www.instagram.com/lumbini_technologies/"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href="https://www.instagram.com/lumbini_technologies/" target="_blank" rel="noreferrer">
               <Instagram size={18} />
             </a>
           </div>

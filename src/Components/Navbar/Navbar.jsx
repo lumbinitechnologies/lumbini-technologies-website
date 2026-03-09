@@ -57,16 +57,11 @@ const Navbar = () => {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) {
-      setIsAdmin(false);
-      return;
-    }
+    if (!user) { setIsAdmin(false); return; }
     checkAdmin(user.email);
   }, [user, authLoading]);
 
-  useEffect(() => {
-    closeMenu();
-  }, [location]);
+  useEffect(() => { closeMenu(); }, [location]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -93,11 +88,15 @@ const Navbar = () => {
           align-items: center;
           padding: 14px 40px;
           background: transparent;
-          transition: 0.3s;
+          transition: background 0.3s;
           z-index: 1000;
           box-sizing: border-box;
         }
-        .header.sticky { background: rgba(0, 0, 0, 0.95); }
+        .header.sticky {
+          background: rgba(0, 0, 0, 0.95);
+          box-shadow: 0 1px 0 rgba(250, 204, 21, 0.1);
+        }
+
         .logo {
           font-size: 28px;
           color: white;
@@ -105,54 +104,59 @@ const Navbar = () => {
           text-decoration: none;
           flex-shrink: 0;
         }
+
         .navbar {
           display: flex;
           align-items: center;
           gap: 20px;
         }
         .navbar a {
-          color: white;
+          color: rgba(255, 255, 255, 0.8);
           text-decoration: none;
           font-size: 15px;
           padding: 6px 12px;
-          transition: 0.25s;
+          transition: color 0.25s;
         }
         .navbar a:hover { color: #facc15; }
+
         .dropdown-container { position: relative; }
         .dropdown-trigger {
           background: none;
           border: none;
-          color: white;
+          color: rgba(255, 255, 255, 0.8);
           font-size: 15px;
           cursor: pointer;
           padding: 6px 12px;
           transition: color 0.25s;
         }
         .dropdown-trigger:hover { color: #facc15; }
+
         .dropdown-menu {
           position: absolute;
-          top: 28px; /* ← reduced from 38px to close the gap */
+          top: 28px;
           left: 0;
           background: #111;
-          border: 1px solid #222;
+          border: 1px solid rgba(250, 204, 21, 0.15);
           border-radius: 8px;
           display: none;
           flex-direction: column;
           min-width: 150px;
           overflow: hidden;
-          box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
         }
         .dropdown-menu a {
           padding: 10px 16px;
           font-size: 14px;
-          border-bottom: 1px solid #1a1a1a;
+          color: rgba(255, 255, 255, 0.7);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         .dropdown-menu a:last-child { border-bottom: none; }
         .dropdown-menu a:hover {
-          background: rgba(250, 204, 21, 0.08);
+          background: rgba(250, 204, 21, 0.07);
           color: #facc15;
         }
         .dropdown-menu.show { display: flex; }
+
         .user-dropdown-container { position: relative; }
         .user-avatar-btn {
           width: 34px;
@@ -174,39 +178,42 @@ const Navbar = () => {
           transform: scale(1.08);
           box-shadow: 0 0 12px rgba(250, 204, 21, 0.4);
         }
+
         .user-dropdown-menu {
           position: absolute;
           top: 44px;
           right: 0;
           background: #111;
-          border: 1px solid #222;
+          border: 1px solid rgba(250, 204, 21, 0.15);
           border-radius: 10px;
           display: none;
           flex-direction: column;
           min-width: 210px;
           overflow: hidden;
-          box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
           z-index: 999;
         }
         .user-dropdown-menu.show { display: flex; }
+
         .user-dropdown-email {
           padding: 12px 16px;
           font-size: 13px;
           color: #facc15;
           background: rgba(250, 204, 21, 0.06);
-          border-bottom: 1px solid #222;
+          border-bottom: 1px solid rgba(250, 204, 21, 0.1);
           word-break: break-all;
         }
+
         .user-dropdown-item {
           padding: 11px 16px;
           font-size: 14px;
-          color: #fff;
+          color: rgba(255, 255, 255, 0.7);
           background: none;
           border: none;
-          border-bottom: 1px solid #1a1a1a;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
           cursor: pointer;
           text-align: left;
-          transition: background 0.2s;
+          transition: background 0.2s, color 0.2s;
           text-decoration: none;
           display: block;
           width: 100%;
@@ -214,41 +221,40 @@ const Navbar = () => {
         }
         .user-dropdown-item:last-child { border-bottom: none; }
         .user-dropdown-item:hover {
-          background: rgba(255, 255, 255, 0.05);
+          background: rgba(250, 204, 21, 0.05);
           color: #facc15;
         }
-        .user-dropdown-item.logout { color: #f87171; }
+        .user-dropdown-item.logout { color: rgba(248, 113, 113, 0.8); }
         .user-dropdown-item.logout:hover {
-          background: rgba(239, 68, 68, 0.08);
+          background: rgba(239, 68, 68, 0.07);
           color: #f87171;
         }
         .user-dropdown-item.admin-item {
           color: #facc15;
-          font-size: 13px;
-          background: rgba(250,204,21,0.04);
-          border-bottom: 1px solid #222;
+          background: rgba(250, 204, 21, 0.04);
+          border-bottom: 1px solid rgba(250, 204, 21, 0.08);
         }
         .user-dropdown-item.admin-item:hover {
-          background: rgba(250,204,21,0.1);
-          color: #facc15;
+          background: rgba(250, 204, 21, 0.09);
         }
+
         .auth-links {
           display: flex;
           align-items: center;
           gap: 8px;
         }
         .nav-login-btn {
-          color: white;
+          color: rgba(255, 255, 255, 0.8);
           text-decoration: none;
           font-size: 15px;
           padding: 6px 14px;
-          border: 1px solid rgba(255,255,255,0.2);
+          border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 6px;
           transition: 0.25s;
         }
         .nav-login-btn:hover {
           border-color: #facc15;
-          color: #facc15 !important;
+          color: #facc15;
         }
         .nav-signup-btn {
           color: #000 !important;
@@ -263,7 +269,9 @@ const Navbar = () => {
         .nav-signup-btn:hover {
           background: #fde047;
           color: #000 !important;
+          box-shadow: 0 4px 14px rgba(250, 204, 21, 0.35);
         }
+
         .menu-toggle {
           display: none;
           flex-direction: column;
@@ -274,11 +282,12 @@ const Navbar = () => {
         .menu-toggle span {
           width: 25px;
           height: 2.5px;
-          background: white;
+          background: #facc15;
           border-radius: 2px;
           transition: 0.3s;
           display: block;
         }
+
         @media (max-width: 900px) {
           .header { padding: 14px 20px; }
           .menu-toggle { display: flex; z-index: 1100; }
@@ -300,7 +309,7 @@ const Navbar = () => {
           .dropdown-menu {
             position: static;
             background: #111;
-            border: none;
+            border: 1px solid rgba(250, 204, 21, 0.12);
             border-radius: 8px;
             box-shadow: none;
             width: 100%;
@@ -308,7 +317,7 @@ const Navbar = () => {
           }
           .user-dropdown-menu {
             position: static;
-            border: none;
+            border: 1px solid rgba(250, 204, 21, 0.12);
             border-radius: 8px;
             box-shadow: none;
             width: 210px;
@@ -331,9 +340,7 @@ const Navbar = () => {
         </div>
 
         <nav className={`navbar ${menuOpen ? "show" : ""}`}>
-          <Link to="/" onClick={closeMenu}>
-            Home
-          </Link>
+          <Link to="/" onClick={closeMenu}>Home</Link>
 
           <div
             className="dropdown-container"
@@ -347,36 +354,20 @@ const Navbar = () => {
               About ▾
             </button>
             <div className={`dropdown-menu ${aboutOpen ? "show" : ""}`}>
-              <Link to="/About" onClick={closeMenu}>
-                About Us
-              </Link>
-              <Link to="/Gallery" onClick={closeMenu}>
-                Gallery
-              </Link>
+              <Link to="/About" onClick={closeMenu}>About Us</Link>
+              <Link to="/Gallery" onClick={closeMenu}>Gallery</Link>
             </div>
           </div>
 
-          <Link to="/ServicePage" onClick={closeMenu}>
-            Services
-          </Link>
-          <Link to="/Career" onClick={closeMenu}>
-            Careers
-          </Link>
-          <Link to="/Products" onClick={closeMenu}>
-            Products
-          </Link>
-          <Link to="/Contact" onClick={closeMenu}>
-            Contact
-          </Link>
+          <Link to="/ServicePage" onClick={closeMenu}>Services</Link>
+          <Link to="/Career" onClick={closeMenu}>Careers</Link>
+          <Link to="/Products" onClick={closeMenu}>Products</Link>
+          <Link to="/Contact" onClick={closeMenu}>Contact</Link>
 
           {!user ? (
             <div className="auth-links">
-              <Link to="/Login" className="nav-login-btn" onClick={closeMenu}>
-                Login
-              </Link>
-              <Link to="/signup" className="nav-signup-btn" onClick={closeMenu}>
-                Sign Up
-              </Link>
+              <Link to="/Login" className="nav-login-btn" onClick={closeMenu}>Login</Link>
+              <Link to="/signup" className="nav-signup-btn" onClick={closeMenu}>Sign Up</Link>
             </div>
           ) : (
             <div className="user-dropdown-container" ref={userMenuRef}>
@@ -387,44 +378,16 @@ const Navbar = () => {
               >
                 {avatarLetter}
               </button>
-
-              <div
-                className={`user-dropdown-menu ${userMenuOpen ? "show" : ""}`}
-              >
+              <div className={`user-dropdown-menu ${userMenuOpen ? "show" : ""}`}>
                 <div className="user-dropdown-email">{user.email}</div>
-
                 {isAdmin && (
-                  <Link
-                    to="/admin-dashboard"
-                    className="user-dropdown-item admin-item"
-                    onClick={closeMenu}
-                  >
+                  <Link to="/admin-dashboard" className="user-dropdown-item admin-item" onClick={closeMenu}>
                     ⚙ Admin Dashboard
                   </Link>
                 )}
-
-                <Link
-                  to="/dashboard"
-                  className="user-dropdown-item"
-                  onClick={closeMenu}
-                >
-                  Dashboard
-                </Link>
-
-                <Link
-                  to="/my-applications"
-                  className="user-dropdown-item"
-                  onClick={closeMenu}
-                >
-                  My Applications
-                </Link>
-
-                <button
-                  className="user-dropdown-item logout"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </button>
+                <Link to="/dashboard" className="user-dropdown-item" onClick={closeMenu}>Dashboard</Link>
+                <Link to="/my-applications" className="user-dropdown-item" onClick={closeMenu}>My Applications</Link>
+                <button className="user-dropdown-item logout" onClick={handleLogout}>Logout</button>
               </div>
             </div>
           )}

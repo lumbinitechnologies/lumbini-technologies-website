@@ -2,161 +2,127 @@ import React, { useState } from "react";
 import { supabase } from "../../services/supabase";
 import { Link, useNavigate } from "react-router-dom";
 
-// Toast notification component
 const Toast = ({ message, type, onClose }) => {
   if (!message) return null;
-
-  const styles = {
-    wrapper: {
-      position: "fixed",
-      top: "1.5rem",
-      right: "1.5rem",
-      zIndex: 9999,
-      animation: "slideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
-    },
-    toast: {
-      display: "flex",
-      alignItems: "flex-start",
-      gap: "0.75rem",
-      padding: "1rem 1.25rem",
-      borderRadius: "12px",
-      maxWidth: "360px",
-      boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
-      backdropFilter: "blur(16px)",
-      border:
-        type === "error"
-          ? "1px solid rgba(239,68,68,0.4)"
-          : "1px solid rgba(74,222,128,0.4)",
-      background:
-        type === "error" ? "rgba(30, 10, 10, 0.85)" : "rgba(10, 30, 15, 0.85)",
-    },
-    icon: {
-      fontSize: "1.2rem",
-      marginTop: "1px",
-      flexShrink: 0,
-    },
-    body: {
-      flex: 1,
-    },
-    title: {
-      fontWeight: 700,
-      fontSize: "0.88rem",
-      color: type === "error" ? "#f87171" : "#4ade80",
-      marginBottom: "0.2rem",
-      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-    },
-    text: {
-      fontSize: "0.82rem",
-      color: "rgba(255,255,255,0.72)",
-      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-      lineHeight: 1.45,
-    },
-    close: {
-      background: "none",
-      border: "none",
-      color: "rgba(255,255,255,0.4)",
-      cursor: "pointer",
-      fontSize: "1rem",
-      padding: "0",
-      lineHeight: 1,
-      flexShrink: 0,
-      transition: "color 0.2s",
-    },
-  };
-
   return (
     <>
-      <style>{`
-        @keyframes slideIn {
-          from { opacity: 0; transform: translateX(40px) scale(0.95); }
-          to   { opacity: 1; transform: translateX(0)   scale(1);    }
-        }
-      `}</style>
-      <div style={styles.wrapper}>
-        <div style={styles.toast}>
-          <span style={styles.icon}>{type === "error" ? "⚠️" : "✅"}</span>
-          <div style={styles.body}>
-            <div style={styles.title}>
-              {type === "error" ? "Error" : "Success"}
+      <style>{`@keyframes slideIn { from { opacity:0; transform:translateX(40px) scale(0.95);} to { opacity:1; transform:translateX(0) scale(1);}}`}</style>
+      <div style={{
+        position: "fixed", top: "5.5rem", right: "1.5rem", zIndex: 9999,
+        animation: "slideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+      }}>
+        <div style={{
+          display: "flex", alignItems: "flex-start", gap: "0.75rem",
+          padding: "1rem 1.25rem", borderRadius: "12px", maxWidth: "360px",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.35)", backdropFilter: "blur(16px)",
+          border: type === "error" ? "1px solid rgba(239,68,68,0.4)" : "1px solid rgba(57,255,20,0.4)",
+          background: type === "error" ? "rgba(30, 10, 10, 0.85)" : "rgba(10, 30, 15, 0.85)",
+        }}>
+          <span style={{ fontSize: "1.2rem", marginTop: "1px", flexShrink: 0 }}>
+            {type === "error" ? "⚠️" : "✅"}
+          </span>
+          <div style={{ flex: 1 }}>
+            <div style={{
+              fontWeight: 700, fontSize: "0.82rem",
+              color: type === "error" ? "#f87171" : "#39ff14",
+              marginBottom: "0.2rem", fontFamily: "'Share Tech Mono', monospace",
+              letterSpacing: "0.08em",
+            }}>
+              {type === "error" ? "// ERROR" : "// SUCCESS"}
             </div>
-            <div style={styles.text}>{message}</div>
+            <div style={{
+              fontSize: "0.78rem", color: "rgba(255,255,255,0.65)",
+              fontFamily: "'Share Tech Mono', monospace", lineHeight: 1.5,
+            }}>
+              {message}
+            </div>
           </div>
-          <button
-            style={styles.close}
-            onClick={onClose}
+          <button onClick={onClose}
+            style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1rem", padding: 0, lineHeight: 1, flexShrink: 0, transition: "color 0.2s" }}
             onMouseEnter={(e) => (e.target.style.color = "#fff")}
-            onMouseLeave={(e) =>
-              (e.target.style.color = "rgba(255,255,255,0.4)")
-            }
-          >
-            ✕
-          </button>
+            onMouseLeave={(e) => (e.target.style.color = "rgba(255,255,255,0.4)")}>✕</button>
         </div>
       </div>
     </>
   );
 };
 
+const PasswordWhisper = ({ visible }) => {
+  if (!visible) return null;
+  return (
+    <div className="password-whisper">
+      <span className="whisper-eye">⚠</span>
+      <span className="whisper-text">
+        <span className="whisper-tag">[SYS://NOTICE]</span>{" "}
+        No preview. No reveal. Intentional.{" "}
+        <span className="whisper-accent">Type with precision.</span>{" "}
+        What enters the void... stays in the void.
+      </span>
+    </div>
+  );
+};
+
 const Signup = () => {
   const navigate = useNavigate();
-
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // Toast state
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const [toast, setToast] = useState({ message: "", type: "" });
 
   const showToast = (message, type = "error") => {
     setToast({ message, type });
-    if (type === "success") {
-      setTimeout(() => setToast({ message: "", type: "" }), 4000);
-    }
+    if (type === "success") setTimeout(() => setToast({ message: "", type: "" }), 4000);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (password !== confirmPassword) {
-      showToast("Passwords do not match. Please re-enter them.", "error");
-      return;
-    }
-
-    if (password.length < 6) {
-      showToast("Password must be at least 6 characters long.", "error");
-      return;
-    }
-
+    if (password !== confirmPassword) { showToast("Passwords do not match. Please re-enter them.", "error"); return; }
+    if (password.length < 6) { showToast("Password must be at least 6 characters long.", "error"); return; }
     setLoading(true);
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName },
-        emailRedirectTo: "https://lumbinitechnologies.com/login",
-      },
-    });
-
-    if (error) {
-      showToast(error.message, "error");
-      setLoading(false);
-      return;
-    }
-
-    showToast(
-      "Account created! Please check your email to confirm your account.",
-      "success",
-    );
-    setTimeout(() => navigate("/Login"), 2500);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(), password,
+        options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}/email-confirmed` },
+      });
+      if (error) {
+        if (error.status === 504 || error.message?.toLowerCase().includes("timeout")) {
+          showToast("Server timed out. Please try again in a moment.", "error");
+        } else { showToast(error.message, "error"); }
+        return;
+      }
+      showToast("Account created! Please check your email and verify your account before logging in.", "success");
+    } catch (err) {
+      if (err.name === "AbortError" || err.message?.toLowerCase().includes("timeout")) {
+        showToast("Request timed out. Please check your connection and try again.", "error");
+      } else { showToast("Something went wrong. Please try again.", "error"); }
+    } finally { setLoading(false); }
   };
 
   return (
     <>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap');
+
+        @keyframes glitchBlink {
+          0%, 94%, 100% { opacity: 1; text-shadow: 0 0 10px #facc15, 0 0 40px rgba(250,204,21,0.2); }
+          95%            { opacity: 0.2; text-shadow: 5px 0 #facc15; }
+          97%            { opacity: 0.8; text-shadow: -4px 0 #facc15; }
+        }
+        @keyframes whisperIn {
+          from { opacity: 0; transform: translateY(-4px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes warningPulse {
+          0%, 100% { opacity: 0.7; }
+          50%       { opacity: 1; text-shadow: 0 0 10px #facc15; }
+        }
+        @keyframes terminalCursor {
+          0%, 100% { opacity: 1; } 50% { opacity: 0; }
+        }
+
         .signup-container {
           display: flex;
           justify-content: center;
@@ -170,28 +136,54 @@ const Signup = () => {
         .signup-form {
           background: rgba(255, 255, 255, 0.1);
           backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
           border-radius: 20px;
           box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2);
           padding: 2.5rem 3rem;
           width: 100%;
           max-width: 500px;
           box-sizing: border-box;
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           text-align: center;
+          font-family: 'Share Tech Mono', monospace;
+        }
+
+        .signup-tbar {
+          display: flex; align-items: center; gap: 5px;
+          margin-bottom: 1.6rem;
+          padding: 0.3rem 0.65rem;
+          background: rgba(57,255,20,0.06);
+          border: 1px solid rgba(57,255,20,0.2);
+          border-radius: 5px;
+          font-size: 0.56rem; color: #39ff14; letter-spacing: 0.12em;
+          text-align: left;
+        }
+        .signup-tbar-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+        .signup-tbar-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 3px; }
+        .signup-cursor {
+          display: inline-block; width: 5px; height: 10px;
+          background: #39ff14; margin-left: 3px;
+          animation: terminalCursor 1s step-end infinite;
+          vertical-align: middle;
         }
 
         .signup-title {
           font-size: 2rem;
           margin-bottom: 0.4rem;
-          color: #ffffff;
-          font-weight: 700;
-          letter-spacing: 1px;
+          color: #facc15;
+          font-weight: 900;
+          letter-spacing: 3px;
+          font-family: 'Orbitron', monospace;
+          text-shadow: 0 0 20px rgba(250,204,21,0.5), 0 0 40px rgba(250,204,21,0.2);
+          animation: glitchBlink 6s infinite;
         }
 
         .signup-subtitle {
-          color: rgba(255, 255, 255, 0.5);
-          font-size: 0.9rem;
+          color: rgba(57, 255, 20, 0.55);
+          font-size: 0.76rem;
           margin-bottom: 1.8rem;
+          font-family: 'Share Tech Mono', monospace;
+          letter-spacing: 2px;
+          text-transform: uppercase;
         }
 
         .signup-field {
@@ -204,171 +196,151 @@ const Signup = () => {
         .signup-input {
           width: 100%;
           padding: 14px 16px;
-          background: rgba(255, 255, 255, 0.08);
-          border: 2px solid rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.07);
+          border: 1px solid rgba(250, 204, 21, 0.3);
           border-radius: 8px;
-          font-size: 1rem;
-          color: #ffffff;
+          font-size: 0.95rem;
+          color: #fff;
           box-sizing: border-box;
-          transition: border-color 0.25s ease, box-shadow 0.25s ease;
-        }
-
-        .signup-input::placeholder {
-          color: rgba(255, 255, 255, 0.45);
-        }
-
-        .signup-input:focus {
-          border-color: #facc15;
-          box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.15);
+          transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+          font-family: 'Share Tech Mono', monospace;
+          letter-spacing: 0.05em;
           outline: none;
         }
-
+        .signup-input::placeholder { color: rgba(250, 204, 21, 0.28); }
+        .signup-input:focus {
+          border-color: #facc15;
+          box-shadow: 0 0 0 2px rgba(250,204,21,0.12), 0 0 18px rgba(250,204,21,0.1);
+          background: rgba(255, 255, 255, 0.1);
+        }
         .signup-input.input-error {
           border-color: #ef4444;
-          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+          box-shadow: 0 0 0 2px rgba(239,68,68,0.15);
         }
 
         .error-msg {
-          font-size: 0.78rem;
-          color: #f87171;
-          margin-top: 5px;
-          font-weight: 500;
+          font-size: 0.72rem; color: #f87171; margin-top: 5px;
+          font-family: 'Share Tech Mono', monospace; letter-spacing: 0.04em;
+        }
+
+        .password-whisper {
+          display: flex; align-items: flex-start; gap: 0.55rem;
+          margin-top: 0.45rem;
+          padding: 0.6rem 0.85rem;
+          border-radius: 6px;
+          background: rgba(250, 204, 21, 0.06);
+          border: 1px solid rgba(250, 204, 21, 0.28);
+          border-left: 3px solid #facc15;
+          animation: whisperIn 0.35s ease forwards;
+          width: 100%; box-sizing: border-box; text-align: left;
+          box-shadow: 0 0 20px rgba(250,204,21,0.06), inset 0 0 10px rgba(250,204,21,0.03);
+        }
+        .whisper-eye {
+          font-size: 0.85rem; flex-shrink: 0; color: #facc15;
+          margin-top: 2px; animation: warningPulse 2s infinite;
+        }
+        .whisper-text {
+          font-size: 0.72rem; line-height: 1.6;
+          color: rgba(250, 204, 21, 0.6);
+          font-family: 'Share Tech Mono', monospace; letter-spacing: 0.03em;
+        }
+        .whisper-tag { color: #facc15; font-weight: 700; text-shadow: 0 0 8px rgba(250,204,21,0.5); }
+        .whisper-accent {
+          color: rgba(250, 204, 21, 0.95);
+          text-decoration: underline;
+          text-decoration-color: rgba(250,204,21,0.4);
+          text-underline-offset: 2px;
         }
 
         .signup-button {
-          width: 100%;
-          padding: 14px;
-          background-color: #facc15;
-          border: none;
-          border-radius: 8px;
-          color: #000;
-          font-weight: 700;
-          font-size: 1.1rem;
-          cursor: pointer;
-          margin-top: 1.5rem;
+          width: 100%; padding: 14px;
+          background: #facc15;
+          border: none; border-radius: 8px;
+          color: #000; font-weight: 700;
+          font-size: 1rem; cursor: pointer; margin-top: 1.5rem;
           transition: all 0.3s ease;
+          font-family: 'Orbitron', monospace;
+          letter-spacing: 2px; text-transform: uppercase;
         }
-
         .signup-button:hover {
-          background-color: #fde047;
+          background: #fde047;
           transform: translateY(-1px);
-          box-shadow: 0 4px 16px rgba(250, 204, 21, 0.35);
+          box-shadow: 0 4px 24px rgba(250,204,21,0.45), 0 0 40px rgba(250,204,21,0.15);
         }
-
-        .signup-button:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          transform: none;
-          box-shadow: none;
-        }
+        .signup-button:active { transform: translateY(0); }
+        .signup-button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
         .signup-footer {
           margin-top: 1.25rem;
-          color: rgba(255, 255, 255, 0.55);
-          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.35);
+          font-size: 0.78rem;
+          font-family: 'Share Tech Mono', monospace;
+          letter-spacing: 1px;
         }
-
         .signup-footer a {
-          color: #facc15;
-          font-weight: 600;
-          text-decoration: none;
-          transition: color 0.2s ease;
+          color: #facc15; font-weight: 600; text-decoration: none;
+          transition: color 0.2s; text-shadow: 0 0 8px rgba(250,204,21,0.4);
         }
-
-        .signup-footer a:hover {
-          color: #fde047;
-          text-decoration: underline;
-        }
+        .signup-footer a:hover { color: #fde047; text-decoration: underline; }
 
         @media (max-width: 768px) {
-          .signup-container {
-            padding: 10rem 1rem;
-            margin-top: 1rem;
-          }
-
-          .signup-form {
-            padding: 2rem 1.5rem;
-          }
-
-          .signup-title {
-            font-size: 1.6rem;
-          }
-
-          .signup-button {
-            font-size: 1rem;
-          }
+          .signup-container { padding: 10rem 1rem; margin-top: 1rem; }
+          .signup-form { padding: 2rem 1.5rem; }
+          .signup-title { font-size: 1.5rem; }
+          .signup-button { font-size: 0.9rem; }
         }
       `}</style>
 
-      {/* Toast notification */}
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        onClose={() => setToast({ message: "", type: "" })}
-      />
+      <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: "", type: "" })} />
 
       <div className="signup-container">
         <form onSubmit={handleSubmit} className="signup-form">
-          <h2 className="signup-title">Create Account</h2>
-          <p className="signup-subtitle">Join us today</p>
+
+          <div className="signup-tbar">
+            <span className="signup-tbar-dot" style={{ background: "#ff5f57" }} />
+            <span className="signup-tbar-dot" style={{ background: "#facc15" }} />
+            <span className="signup-tbar-dot" style={{ background: "#39ff14" }} />
+            <span className="signup-tbar-text">AUTH.SYS — NEW USER INIT<span className="signup-cursor" /></span>
+          </div>
+
+          <h2 className="signup-title">CREATE ACCOUNT</h2>
+          <p className="signup-subtitle">// initialize new user</p>
 
           <div className="signup-field">
-            <input
-              type="text"
-              placeholder="Full Name"
-              className="signup-input"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-            />
+            <input type="text" placeholder="full_name" className="signup-input"
+              value={fullName} onChange={(e) => setFullName(e.target.value)} required />
           </div>
 
           <div className="signup-field">
-            <input
-              type="email"
-              placeholder="Email Address"
-              className="signup-input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <input type="email" placeholder="email_address" className="signup-input"
+              value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
 
           <div className="signup-field">
-            <input
-              type="password"
-              placeholder="Password"
-              className="signup-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <input type="password" placeholder="set_password" className="signup-input"
+              value={password} onChange={(e) => setPassword(e.target.value)}
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={() => { if (!confirmPassword) setPasswordFocused(false); }}
+              required />
+            <PasswordWhisper visible={passwordFocused} />
           </div>
 
           <div className="signup-field">
-            <input
-              type="password"
-              placeholder="Confirm Password"
-              className={`signup-input ${
-                confirmPassword && password !== confirmPassword
-                  ? "input-error"
-                  : ""
-              }`}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
+            <input type="password" placeholder="confirm_password"
+              className={`signup-input${confirmPassword && password !== confirmPassword ? " input-error" : ""}`}
+              value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+              onFocus={() => setPasswordFocused(true)} required />
             {confirmPassword && password !== confirmPassword && (
-              <span className="error-msg">Passwords do not match</span>
+              <span className="error-msg">// passwords do not match</span>
             )}
           </div>
 
           <button type="submit" className="signup-button" disabled={loading}>
-            {loading ? "Creating Account..." : "Sign Up"}
+            {loading ? "INITIALIZING..." : "SIGN UP"}
           </button>
 
           <p className="signup-footer">
-            Already have an account? <Link to="/Login">Login</Link>
+            already have an account? <Link to="/Login">LOGIN</Link>
           </p>
         </form>
       </div>

@@ -28,6 +28,9 @@ const Career = lazy(() => import("./Components/Career/Career"));
 const Contact = lazy(() => import("./Components/Contact/Contact"));
 const Login = lazy(() => import("./Components/Login/Login"));
 const Signup = lazy(() => import("./Components/SignUp/SignUp"));
+const EmailVerified = lazy(() =>
+  import("./Components/EmailVerified/EmailVerified")
+);
 const Products = lazy(() => import("./Components/Products/Products"));
 const InternshipApplication = lazy(
   () => import("./Components/InternshipApplication/InternshipApplication"),
@@ -36,6 +39,8 @@ const SkillArc = lazy(() => import("./Components/SkillArc/SkillArc"));
 const MyApplications = lazy(() => import("./Components/Users/MyApplications"));
 const UserDashboard = lazy(() => import("./Components/Users/UserDashboard"));
 const AdminDashboard = lazy(() => import("./Components/Admin/AdminDashboard"));
+const PrivacyPolicy = lazy(() => import("./Components/PrivacyPolicy/PrivacyPolicy"));
+const TermsAndConditions = lazy(() => import("./Components/TermsAndConditions/TermsAndConditions"));
 
 // ── Scroll to top on route change ─────────────────────────────────────────────
 const ScrollToTop = () => {
@@ -147,6 +152,7 @@ const AnimatedRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+
         {/* ── Public ── */}
         <Route
           path="/"
@@ -206,15 +212,12 @@ const AnimatedRoutes = () => {
         />
 
         {/* Case-insensitive aliases */}
-        <Route path="/about" element={<Navigate to="/About" replace />} />
-        <Route path="/gallery" element={<Navigate to="/Gallery" replace />} />
-        <Route
-          path="/servicepage"
-          element={<Navigate to="/ServicePage" replace />}
-        />
-        <Route path="/career" element={<Navigate to="/Career" replace />} />
-        <Route path="/contact" element={<Navigate to="/Contact" replace />} />
-        <Route path="/products" element={<Navigate to="/Products" replace />} />
+        <Route path="/about"       element={<Navigate to="/About"       replace />} />
+        <Route path="/gallery"     element={<Navigate to="/Gallery"     replace />} />
+        <Route path="/servicepage" element={<Navigate to="/ServicePage" replace />} />
+        <Route path="/career"      element={<Navigate to="/Career"      replace />} />
+        <Route path="/contact"     element={<Navigate to="/Contact"     replace />} />
+        <Route path="/products"    element={<Navigate to="/Products"    replace />} />
 
         {/* ── Auth ── */}
         <Route
@@ -231,6 +234,14 @@ const AnimatedRoutes = () => {
           element={
             <PageWrapper>
               <Signup />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/email-confirmed"
+          element={
+            <PageWrapper>
+              <EmailVerified />
             </PageWrapper>
           }
         />
@@ -275,6 +286,24 @@ const AnimatedRoutes = () => {
           }
         />
 
+        {/* ── Legal ── */}
+        <Route
+          path="/privacy-policy"
+          element={
+            <PageWrapper>
+              <PrivacyPolicy />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/terms-and-conditions"
+          element={
+            <PageWrapper>
+              <TermsAndConditions />
+            </PageWrapper>
+          }
+        />
+
         {/* ── SkillArc (do not touch) ── */}
         <Route path="/skillarc" element={<SkillArc />} />
 
@@ -291,6 +320,7 @@ const AnimatedRoutes = () => {
             </PageWrapper>
           }
         />
+
       </Routes>
     </AnimatePresence>
   );
