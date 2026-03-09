@@ -547,7 +547,7 @@ const UserDashboard = () => {
             <div className="ud-profile-card">
               <div className="ud-avatar">{avatarLetter}</div>
               <div className="ud-profile-name">
-                {applications[0]?.name || user?.email?.split("@")[0] || "USER"}
+                {user?.user_metadata?.full_name || applications[0]?.name || user?.email?.split("@")[0] || "USER"}
               </div>
               <div className="ud-profile-email">{user?.email}</div>
               <div className="ud-profile-divider" />
@@ -606,7 +606,10 @@ const UserDashboard = () => {
               <div>
                 <div className="ud-welcome-tag">// welcome back</div>
                 <div className="ud-welcome-title">
-                  HELLO, {(applications[0]?.name?.split(" ")[0] || user?.email?.split("@")[0] || "USER").toUpperCase()} 👋
+                  HELLO, {(user?.user_metadata?.full_name?.split(" ")[0] ||
+                    applications[0]?.name?.split(" ")[0] ||
+                    user?.email?.split("@")[0] ||
+                    "USER").toUpperCase()} 👋
                 </div>
                 <div className="ud-welcome-sub">
                   {applications.length === 0
