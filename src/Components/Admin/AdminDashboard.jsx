@@ -375,8 +375,8 @@ const STATUS_CONFIG = {
 
 // ── Supabase helpers ──────────────────────────────────────────────────────────
 
-// ✅ FIXED: now includes user_id from app so interns.user_id is never NULL
-// Without user_id, UserDashboard's .eq("user_id", user.id) lookup always fails
+// ✅ Intern record is ONLY created when status becomes "selected".
+// This function should never be called for pending/shortlisted applicants.
 const getOrCreateIntern = async (app) => {
   const { data: existing } = await supabase
     .from("interns")
@@ -388,7 +388,7 @@ const getOrCreateIntern = async (app) => {
     .from("interns")
     .insert({
       application_id: app.id,
-      user_id:        app.user_id,   // ← ADDED: links intern to auth.users.id
+      user_id:        app.user_id,
       name:           app.name,
       email:          app.email,
       start_date:     new Date().toISOString().split("T")[0],
@@ -398,6 +398,17 @@ const getOrCreateIntern = async (app) => {
     .single();
   if (error) throw new Error("Could not create intern record: " + error.message);
   return created.id;
+};
+
+// ✅ Looks up an existing intern without creating one.
+// Used during document generation so we never create phantom interns.
+const getExistingInternId = async (applicationId) => {
+  const { data } = await supabase
+    .from("interns")
+    .select("id")
+    .eq("application_id", applicationId)
+    .maybeSingle();
+  return data?.id ?? null;
 };
 
 const uploadAndSaveDocument = async (pdfBlob, _fileName, internId, documentType) => {
@@ -439,9 +450,13 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (!selected) { setDocuments([]); return; }
+
+    // ✅ Only fetch documents if the applicant is already selected (has an intern record).
+    // No intern creation here — just a read.
     const fetchDocs = async () => {
       try {
-        const internId = await getOrCreateIntern(selected);
+        const internId = await getExistingInternId(selected.id);
+        if (!internId) { setDocuments([]); return; }
         const { data } = await supabase.from("documents").select("*").eq("intern_id", internId);
         setDocuments(data || []);
       } catch {
@@ -469,9 +484,22 @@ const AdminDashboard = () => {
     }
   };
 
+  // ✅ Intern record is created HERE — only when status becomes "selected".
   const updateStatus = async (id, status) => {
     setUpdating(id + status);
     await supabase.from("applications").update({ status }).eq("id", id);
+
+    if (status === "selected") {
+      const app = applications.find((a) => a.id === id);
+      if (app) {
+        try {
+          await getOrCreateIntern({ ...app, status: "selected" });
+        } catch (e) {
+          console.warn("[AdminDashboard] Could not create intern on selection:", e.message);
+        }
+      }
+    }
+
     await fetchApplications();
     if (selected?.id === id) setSelected((prev) => ({ ...prev, status }));
     setUpdating(null);
@@ -494,9 +522,17 @@ const AdminDashboard = () => {
       const labelMap = { offer: "Offer_Letter", certificate: "Certificate" };
       const downloadName = `${selected.name?.replace(/\s+/g, "_")}_${labelMap[type]}.pdf`;
       doc.save(`${Date.now()}_${downloadName}`);
+
+      // ✅ Document upload: look up existing intern only — never create one here.
+      // If the applicant isn't selected yet, internId will be null and upload is skipped.
       try {
+        const internId = await getExistingInternId(selected.id);
+        if (!internId) {
+          console.warn("[AdminDashboard] No intern record found — document not saved to DB.");
+          showToast(`${labelMap[type].replace("_", " ")} downloaded ✓ (not saved — applicant not selected)`);
+          return;
+        }
         const pdfBlob = doc.output("blob");
-        const internId = await getOrCreateIntern(selected);
         const docTypeMap = { offer: "offer_letter", certificate: "certificate" };
         const fileUrl = await uploadAndSaveDocument(pdfBlob, downloadName, internId, docTypeMap[type]);
         console.log("[AdminDashboard] Document saved:", fileUrl);
@@ -648,6 +684,7 @@ const AdminDashboard = () => {
         .adm-drawer-actions .adm-action-btn { flex:1; padding:9px 12px; font-size:12px; text-align:center; }
 
         .adm-docs-divider { font-size:9px; font-family:'JetBrains Mono',monospace; color:rgba(57,255,20,0.35); text-transform:uppercase; letter-spacing:.15em; margin: 16px 0 10px; padding-bottom:6px; border-bottom:1px solid rgba(255,255,255,0.05); }
+        .adm-docs-gate { font-size:11px; font-family:'JetBrains Mono',monospace; color:rgba(255,255,255,0.2); padding: 10px 0; }
 
         .adm-toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:#facc15; color:#000; font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; padding:10px 22px; border-radius:999px; z-index:200; animation:toastIn .3s ease; white-space:nowrap; }
         @keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(12px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
@@ -853,8 +890,13 @@ const AdminDashboard = () => {
                 <button className="adm-action-btn btn-reject"    disabled={selected.status === "rejected"    || !!updating} onClick={() => updateStatus(selected.id, "rejected")}>Reject</button>
               </div>
 
+              {/* ✅ Documents section — only shown for selected applicants */}
               <div className="adm-docs-divider">Documents</div>
-              {(() => {
+              {!isSelected ? (
+                <div className="adm-docs-gate">
+                  // Select applicant to unlock document generation
+                </div>
+              ) : (() => {
                 const offerDoc = documents.find((d) => d.document_type === "offer_letter");
                 const certDoc  = documents.find((d) => d.document_type === "certificate");
                 return (
@@ -886,35 +928,31 @@ const AdminDashboard = () => {
                       </div>
                     )}
 
-                    {isSelected && (
-                      <>
-                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                          <button
-                            className="adm-action-btn btn-certificate"
-                            style={{ flex: 1 }}
-                            disabled={!!sending}
-                            onClick={() => handleGenerateDocument("certificate")}
-                          >
-                            {sending === `${selected.id}:certificate`
-                              ? "Generating..."
-                              : certDoc ? "↺ Regenerate Certificate" : "Generate Certificate"}
-                          </button>
-                          {certDoc && (
-                            <a
-                              href={certDoc.file_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="adm-action-btn"
-                              style={{ background: "rgba(96,165,250,0.07)", border: "1px solid rgba(96,165,250,0.2)", color: "#60a5fa", textDecoration: "none", whiteSpace: "nowrap" }}
-                            >↗ View</a>
-                          )}
-                        </div>
-                        {certDoc && (
-                          <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "#39ff14", paddingLeft: 2 }}>
-                            ✓ Certificate generated
-                          </div>
-                        )}
-                      </>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <button
+                        className="adm-action-btn btn-certificate"
+                        style={{ flex: 1 }}
+                        disabled={!!sending}
+                        onClick={() => handleGenerateDocument("certificate")}
+                      >
+                        {sending === `${selected.id}:certificate`
+                          ? "Generating..."
+                          : certDoc ? "↺ Regenerate Certificate" : "Generate Certificate"}
+                      </button>
+                      {certDoc && (
+                        <a
+                          href={certDoc.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="adm-action-btn"
+                          style={{ background: "rgba(96,165,250,0.07)", border: "1px solid rgba(96,165,250,0.2)", color: "#60a5fa", textDecoration: "none", whiteSpace: "nowrap" }}
+                        >↗ View</a>
+                      )}
+                    </div>
+                    {certDoc && (
+                      <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "#39ff14", paddingLeft: 2 }}>
+                        ✓ Certificate generated
+                      </div>
                     )}
                   </div>
                 );
