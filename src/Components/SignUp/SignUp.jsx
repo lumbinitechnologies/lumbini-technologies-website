@@ -6,17 +6,23 @@ const Toast = ({ message, type, onClose }) => {
   if (!message) return null;
   return (
     <>
-      <style>{`@keyframes slideIn { from { opacity:0; transform:translateX(40px) scale(0.95);} to { opacity:1; transform:translateX(0) scale(1);}}`}</style>
+      <style>{`@keyframes slideUp { from { opacity:0; transform:translateY(20px) scale(0.95);} to { opacity:1; transform:translateY(0) scale(1);}}`}</style>
       <div style={{
-        position: "fixed", top: "5.5rem", right: "1.5rem", zIndex: 9999,
-        animation: "slideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+        position: "fixed",
+        bottom: "1.5rem",   /* ── bottom so keyboard never covers it ── */
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 9999,
+        width: "calc(100% - 3rem)",
+        maxWidth: "400px",
+        animation: "slideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
       }}>
         <div style={{
           display: "flex", alignItems: "flex-start", gap: "0.75rem",
-          padding: "1rem 1.25rem", borderRadius: "12px", maxWidth: "360px",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.35)", backdropFilter: "blur(16px)",
+          padding: "1rem 1.25rem", borderRadius: "12px",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.5)", backdropFilter: "blur(16px)",
           border: type === "error" ? "1px solid rgba(239,68,68,0.4)" : "1px solid rgba(57,255,20,0.4)",
-          background: type === "error" ? "rgba(30, 10, 10, 0.85)" : "rgba(10, 30, 15, 0.85)",
+          background: type === "error" ? "rgba(30, 10, 10, 0.92)" : "rgba(10, 30, 15, 0.92)",
         }}>
           <span style={{ fontSize: "1.2rem", marginTop: "1px", flexShrink: 0 }}>
             {type === "error" ? "⚠️" : "✅"}
@@ -31,14 +37,14 @@ const Toast = ({ message, type, onClose }) => {
               {type === "error" ? "// ERROR" : "// SUCCESS"}
             </div>
             <div style={{
-              fontSize: "0.78rem", color: "rgba(255,255,255,0.65)",
+              fontSize: "0.78rem", color: "rgba(255,255,255,0.7)",
               fontFamily: "'Share Tech Mono', monospace", lineHeight: 1.5,
             }}>
               {message}
             </div>
           </div>
           <button onClick={onClose}
-            style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1rem", padding: 0, lineHeight: 1, flexShrink: 0, transition: "color 0.2s" }}
+            style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1rem", padding: 0, lineHeight: 1, flexShrink: 0 }}
             onMouseEnter={(e) => (e.target.style.color = "#fff")}
             onMouseLeave={(e) => (e.target.style.color = "rgba(255,255,255,0.4)")}>✕</button>
         </div>
@@ -97,7 +103,6 @@ const Signup = () => {
         return;
       }
 
-      // Supabase silently "succeeds" for existing emails — identities array is empty in that case
       if (data?.user && data.user.identities?.length === 0) {
         showToast("An account with this email already exists. Please log in instead.", "error");
         return;
@@ -137,14 +142,16 @@ const Signup = () => {
           0%, 100% { opacity: 1; } 50% { opacity: 0; }
         }
 
+        /* ── Scrollable container — keyboard won't push content off screen ── */
         .signup-container {
           display: flex;
           justify-content: center;
-          align-items: center;
-          min-height: 80vh;
+          align-items: flex-start;        /* top-aligned so scroll works naturally */
+          min-height: 100vh;
           background: transparent;
-          padding: 8rem 1rem;
-          margin-top: 7rem;
+          padding: 9rem 1rem 6rem;        /* generous bottom padding for keyboard */
+          box-sizing: border-box;
+          overflow-y: auto;
         }
 
         .signup-form {
@@ -247,7 +254,7 @@ const Signup = () => {
           border-left: 3px solid #facc15;
           animation: whisperIn 0.35s ease forwards;
           width: 100%; box-sizing: border-box; text-align: left;
-          box-shadow: 0 0 20px rgba(250,204,21,0.06), inset 0 0 10px rgba(250,204,21,0.03);
+          box-shadow: 0 0 20px rgba(250,204,21,0.06);
         }
         .whisper-eye {
           font-size: 0.85rem; flex-shrink: 0; color: #facc15;
@@ -298,7 +305,7 @@ const Signup = () => {
         .signup-footer a:hover { color: #fde047; text-decoration: underline; }
 
         @media (max-width: 768px) {
-          .signup-container { padding: 10rem 1rem; margin-top: 1rem; }
+          .signup-container { padding: 8rem 1rem 8rem; }
           .signup-form { padding: 2rem 1.5rem; }
           .signup-title { font-size: 1.5rem; }
           .signup-button { font-size: 0.9rem; }

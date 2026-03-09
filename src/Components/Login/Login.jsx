@@ -44,7 +44,6 @@ const Login = () => {
     catch { redirectTo = redirectParam; }
   }
 
-  // ── Single submit handler on the <form> — fixes double-click bug ──
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!email || !password) { setError("Please enter your email and password."); return; }
@@ -120,14 +119,16 @@ const Login = () => {
           0%, 100% { opacity: 1; } 50% { opacity: 0; }
         }
 
+        /* ── Scrollable container — keyboard won't push content off screen ── */
         .login-container {
           display: flex;
           justify-content: center;
-          align-items: center;
-          min-height: 80vh;
+          align-items: flex-start;
+          min-height: 100vh;
           background: transparent;
-          padding: 8rem 1rem;
-          margin-top: 7rem;
+          padding: 9rem 1rem 6rem;
+          box-sizing: border-box;
+          overflow-y: auto;
         }
 
         .login-form {
@@ -318,7 +319,7 @@ const Login = () => {
         .login-footer a:hover { color: #fde047; text-decoration: underline; }
 
         @media (max-width: 768px) {
-          .login-container { padding: 10rem 1rem; margin-top: 1rem; }
+          .login-container { padding: 8rem 1rem 8rem; }
           .login-form { padding: 2rem 1.5rem; }
           .login-title { font-size: 1.5rem; }
           .login-button { font-size: 0.9rem; }
@@ -326,7 +327,6 @@ const Login = () => {
       `}</style>
 
       <div className="login-container">
-        {/* ── form onSubmit handles both Enter key and button click ── */}
         <form className="login-form" onSubmit={handleLogin} noValidate>
 
           <div className="login-tbar">
