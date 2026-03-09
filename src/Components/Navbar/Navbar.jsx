@@ -113,10 +113,7 @@ const Navbar = () => {
           backdrop-filter: blur(8px);
         }
 
-        /* ── Logo ──
-           clamp(min, preferred, max)
-           Scales from 14px on tiny screens up to 22px on desktop.
-           flex-shrink:1 lets it compress before the hamburger ever gets squeezed. */
+        /* ── Logo ── */
         .lt-logo {
           color: #fff;
           font-weight: 700;
@@ -130,16 +127,14 @@ const Navbar = () => {
           text-overflow: ellipsis;
           line-height: 1;
         }
-        /* Both words white — no coloured span needed */
         .lt-logo span { color: #fff; }
 
-        /* ── Hamburger ── no box, just bare lines, synced height to logo */
+        /* ── Hamburger ── */
         .lt-hamburger {
           display: none;
           flex-direction: column;
           justify-content: center;
           align-items: center;
-          /* Width of the lines; height matches logo line-height so they feel paired */
           width: clamp(28px, 5vw, 36px);
           height: clamp(28px, 5vw, 36px);
           min-width: 28px;
@@ -194,9 +189,20 @@ const Navbar = () => {
 
         /* ── About Dropdown ── */
         .lt-dropdown { position: relative; }
+
+        /* Invisible bridge fills the gap so mouse-leave doesn't fire mid-crossing */
+        .lt-dropdown::after {
+          content: '';
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          height: 8px;
+        }
+
         .lt-dropdown-menu {
           position: absolute;
-          top: calc(100% + 8px);
+          top: calc(100% + 2px);
           left: 0;
           background: #111;
           border: 1px solid rgba(250,204,21,0.15);
@@ -206,6 +212,7 @@ const Navbar = () => {
           min-width: 160px;
           overflow: hidden;
           box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+          padding-top: 6px;
         }
         .lt-dropdown-menu.open { display: flex; }
         .lt-dropdown-menu a {
@@ -320,9 +327,7 @@ const Navbar = () => {
         }
         .lt-overlay.open { display: block; opacity: 1; }
 
-        /* ── Drawer ──
-           padding-top pushes content below the fixed header (≈68px tall on mobile).
-           No duplicate logo needed — the main header logo is always visible on top. */
+        /* ── Drawer ── */
         .lt-drawer {
           display: none;
           position: fixed;

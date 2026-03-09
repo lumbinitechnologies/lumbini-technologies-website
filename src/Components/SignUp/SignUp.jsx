@@ -6,48 +6,105 @@ const Toast = ({ message, type, onClose }) => {
   if (!message) return null;
   return (
     <>
-      <style>{`@keyframes slideIn { from { opacity:0; transform:translateY(-10px) scale(0.97);} to { opacity:1; transform:translateY(0) scale(1);}}`}</style>
-      <div style={{
-        position: "fixed",
-        top: "5.5rem",          /* ── always just below navbar ── */
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 99999,          /* ── above everything including navbar ── */
-        width: "calc(100% - 3rem)",
-        maxWidth: "420px",
-        animation: "slideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
-        pointerEvents: "auto",
-      }}>
-        <div style={{
-          display: "flex", alignItems: "flex-start", gap: "0.75rem",
-          padding: "1rem 1.25rem", borderRadius: "12px",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.5)", backdropFilter: "blur(16px)",
-          border: type === "error" ? "1px solid rgba(239,68,68,0.4)" : "1px solid rgba(57,255,20,0.4)",
-          background: type === "error" ? "rgba(20, 5, 5, 0.95)" : "rgba(5, 20, 10, 0.95)",
-        }}>
-          <span style={{ fontSize: "1.2rem", marginTop: "1px", flexShrink: 0 }}>
-            {type === "error" ? "⚠️" : "✅"}
-          </span>
-          <div style={{ flex: 1 }}>
-            <div style={{
-              fontWeight: 700, fontSize: "0.82rem",
-              color: type === "error" ? "#f87171" : "#39ff14",
-              marginBottom: "0.2rem", fontFamily: "'Share Tech Mono', monospace",
-              letterSpacing: "0.08em",
-            }}>
+      <style>{`
+        @keyframes slideIn {
+          from { opacity: 0; transform: translate(-50%, -8px) scale(0.97); }
+          to   { opacity: 1; transform: translate(-50%, 0)   scale(1);    }
+        }
+        .toast-wrapper {
+          position: fixed;
+          top: 5.5rem;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 99999;
+          /* Responsive width: full-bleed on tiny screens, capped on wide ones */
+          width: min(calc(100vw - 2rem), 420px);
+          animation: slideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          pointer-events: auto;
+          /* Prevent any overflow from going outside viewport */
+          max-width: calc(100vw - 2rem);
+          box-sizing: border-box;
+        }
+        .toast-inner {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.75rem;
+          padding: 1rem 1.25rem;
+          border-radius: 12px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          box-sizing: border-box;
+          width: 100%;
+        }
+        .toast-inner.toast-error {
+          border: 1px solid rgba(239,68,68,0.4);
+          background: rgba(20,5,5,0.95);
+        }
+        .toast-inner.toast-success {
+          border: 1px solid rgba(57,255,20,0.4);
+          background: rgba(5,20,10,0.95);
+        }
+        .toast-icon {
+          font-size: 1.2rem;
+          margin-top: 1px;
+          flex-shrink: 0;
+          line-height: 1;
+        }
+        .toast-body { flex: 1; min-width: 0; }
+        .toast-label {
+          font-weight: 700;
+          font-size: 0.82rem;
+          margin-bottom: 0.2rem;
+          font-family: 'Share Tech Mono', monospace;
+          letter-spacing: 0.08em;
+        }
+        .toast-label.toast-error  { color: #f87171; }
+        .toast-label.toast-success { color: #39ff14; }
+        .toast-message {
+          font-size: 0.78rem;
+          color: rgba(255,255,255,0.7);
+          font-family: 'Share Tech Mono', monospace;
+          line-height: 1.5;
+          /* Ensure long words/emails don't break layout */
+          word-break: break-word;
+          overflow-wrap: break-word;
+        }
+        .toast-close {
+          background: none;
+          border: none;
+          color: rgba(255,255,255,0.4);
+          cursor: pointer;
+          font-size: 1rem;
+          padding: 0;
+          line-height: 1;
+          flex-shrink: 0;
+          transition: color 0.15s;
+        }
+        .toast-close:hover { color: #fff; }
+
+        /* On very small screens (<360px), tighten padding */
+        @media (max-width: 360px) {
+          .toast-inner { padding: 0.75rem 1rem; gap: 0.5rem; }
+          .toast-label { font-size: 0.75rem; }
+          .toast-message { font-size: 0.72rem; }
+        }
+      `}</style>
+
+      <div className="toast-wrapper">
+        <div className={`toast-inner toast-${type}`}>
+          <span className="toast-icon">{type === "error" ? "⚠️" : "✅"}</span>
+          <div className="toast-body">
+            <div className={`toast-label toast-${type}`}>
               {type === "error" ? "// ERROR" : "// SUCCESS"}
             </div>
-            <div style={{
-              fontSize: "0.78rem", color: "rgba(255,255,255,0.7)",
-              fontFamily: "'Share Tech Mono', monospace", lineHeight: 1.5,
-            }}>
-              {message}
-            </div>
+            <div className="toast-message">{message}</div>
           </div>
-          <button onClick={onClose}
-            style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1rem", padding: 0, lineHeight: 1, flexShrink: 0 }}
-            onMouseEnter={(e) => (e.target.style.color = "#fff")}
-            onMouseLeave={(e) => (e.target.style.color = "rgba(255,255,255,0.4)")}>✕</button>
+          <button
+            className="toast-close"
+            onClick={onClose}
+            aria-label="Dismiss notification"
+          >✕</button>
         </div>
       </div>
     </>
@@ -85,14 +142,13 @@ const Signup = () => {
     else setTimeout(() => setToast({ message: "", type: "" }), 4000);
   };
 
-  // ── Dismiss keyboard by blurring whatever is focused ──
   const dismissKeyboard = () => {
     if (document.activeElement) document.activeElement.blur();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    dismissKeyboard(); // ← keyboard goes away immediately on submit
+    dismissKeyboard();
 
     if (password !== confirmPassword) { showToast("Passwords do not match. Please re-enter them.", "error"); return; }
     if (password.length < 6) { showToast("Password must be at least 6 characters long.", "error"); return; }
@@ -154,10 +210,10 @@ const Signup = () => {
         .signup-container {
           display: flex;
           justify-content: center;
-          align-items: flex-start;
+          align-items: center;
           min-height: 100vh;
           background: transparent;
-          padding: 9rem 1rem 6rem;
+          padding: 6rem 1rem;
           box-sizing: border-box;
           overflow-y: auto;
         }
@@ -313,7 +369,7 @@ const Signup = () => {
         .signup-footer a:hover { color: #fde047; text-decoration: underline; }
 
         @media (max-width: 768px) {
-          .signup-container { padding: 8rem 1rem 8rem; }
+          .signup-container { padding: 5rem 1rem; }
           .signup-form { padding: 2rem 1.5rem; }
           .signup-title { font-size: 1.5rem; }
           .signup-button { font-size: 0.9rem; }
