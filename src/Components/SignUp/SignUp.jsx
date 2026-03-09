@@ -6,23 +6,24 @@ const Toast = ({ message, type, onClose }) => {
   if (!message) return null;
   return (
     <>
-      <style>{`@keyframes slideUp { from { opacity:0; transform:translateY(20px) scale(0.95);} to { opacity:1; transform:translateY(0) scale(1);}}`}</style>
+      <style>{`@keyframes slideIn { from { opacity:0; transform:translateY(-10px) scale(0.97);} to { opacity:1; transform:translateY(0) scale(1);}}`}</style>
       <div style={{
         position: "fixed",
-        bottom: "1.5rem",   /* ── bottom so keyboard never covers it ── */
+        top: "5.5rem",          /* ── always just below navbar ── */
         left: "50%",
         transform: "translateX(-50%)",
-        zIndex: 9999,
+        zIndex: 99999,          /* ── above everything including navbar ── */
         width: "calc(100% - 3rem)",
-        maxWidth: "400px",
-        animation: "slideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+        maxWidth: "420px",
+        animation: "slideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+        pointerEvents: "auto",
       }}>
         <div style={{
           display: "flex", alignItems: "flex-start", gap: "0.75rem",
           padding: "1rem 1.25rem", borderRadius: "12px",
           boxShadow: "0 8px 32px rgba(0,0,0,0.5)", backdropFilter: "blur(16px)",
           border: type === "error" ? "1px solid rgba(239,68,68,0.4)" : "1px solid rgba(57,255,20,0.4)",
-          background: type === "error" ? "rgba(30, 10, 10, 0.92)" : "rgba(10, 30, 15, 0.92)",
+          background: type === "error" ? "rgba(20, 5, 5, 0.95)" : "rgba(5, 20, 10, 0.95)",
         }}>
           <span style={{ fontSize: "1.2rem", marginTop: "1px", flexShrink: 0 }}>
             {type === "error" ? "⚠️" : "✅"}
@@ -80,11 +81,19 @@ const Signup = () => {
 
   const showToast = (message, type = "error") => {
     setToast({ message, type });
-    if (type === "success") setTimeout(() => setToast({ message: "", type: "" }), 4000);
+    if (type === "success") setTimeout(() => setToast({ message: "", type: "" }), 5000);
+    else setTimeout(() => setToast({ message: "", type: "" }), 4000);
+  };
+
+  // ── Dismiss keyboard by blurring whatever is focused ──
+  const dismissKeyboard = () => {
+    if (document.activeElement) document.activeElement.blur();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    dismissKeyboard(); // ← keyboard goes away immediately on submit
+
     if (password !== confirmPassword) { showToast("Passwords do not match. Please re-enter them.", "error"); return; }
     if (password.length < 6) { showToast("Password must be at least 6 characters long.", "error"); return; }
     setLoading(true);
@@ -142,14 +151,13 @@ const Signup = () => {
           0%, 100% { opacity: 1; } 50% { opacity: 0; }
         }
 
-        /* ── Scrollable container — keyboard won't push content off screen ── */
         .signup-container {
           display: flex;
           justify-content: center;
-          align-items: flex-start;        /* top-aligned so scroll works naturally */
+          align-items: flex-start;
           min-height: 100vh;
           background: transparent;
-          padding: 9rem 1rem 6rem;        /* generous bottom padding for keyboard */
+          padding: 9rem 1rem 6rem;
           box-sizing: border-box;
           overflow-y: auto;
         }

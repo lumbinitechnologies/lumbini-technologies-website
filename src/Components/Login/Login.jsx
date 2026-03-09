@@ -18,6 +18,59 @@ const PasswordWhisper = ({ visible }) => {
   );
 };
 
+/* ── Fixed toast — always visible under navbar, above keyboard ── */
+const Toast = ({ message, type, onClose }) => {
+  if (!message) return null;
+  return (
+    <>
+      <style>{`@keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(-10px) scale(0.97);} to { opacity:1; transform:translateX(-50%) translateY(0) scale(1);}}`}</style>
+      <div style={{
+        position: "fixed",
+        top: "5.5rem",
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 99999,
+        width: "calc(100% - 3rem)",
+        maxWidth: "420px",
+        animation: "toastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+        pointerEvents: "auto",
+      }}>
+        <div style={{
+          display: "flex", alignItems: "flex-start", gap: "0.75rem",
+          padding: "1rem 1.25rem", borderRadius: "12px",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.5)", backdropFilter: "blur(16px)",
+          border: type === "error" ? "1px solid rgba(239,68,68,0.4)" : "1px solid rgba(57,255,20,0.4)",
+          background: type === "error" ? "rgba(20, 5, 5, 0.95)" : "rgba(5, 20, 10, 0.95)",
+        }}>
+          <span style={{ fontSize: "1.2rem", marginTop: "1px", flexShrink: 0 }}>
+            {type === "error" ? "⚠️" : "✅"}
+          </span>
+          <div style={{ flex: 1 }}>
+            <div style={{
+              fontWeight: 700, fontSize: "0.82rem",
+              color: type === "error" ? "#f87171" : "#39ff14",
+              marginBottom: "0.2rem", fontFamily: "'Share Tech Mono', monospace",
+              letterSpacing: "0.08em",
+            }}>
+              {type === "error" ? "// ERROR" : "// SUCCESS"}
+            </div>
+            <div style={{
+              fontSize: "0.78rem", color: "rgba(255,255,255,0.7)",
+              fontFamily: "'Share Tech Mono', monospace", lineHeight: 1.5,
+            }}>
+              {message}
+            </div>
+          </div>
+          <button onClick={onClose}
+            style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1rem", padding: 0, lineHeight: 1, flexShrink: 0 }}
+            onMouseEnter={(e) => (e.target.style.color = "#fff")}
+            onMouseLeave={(e) => (e.target.style.color = "rgba(255,255,255,0.4)")}>✕</button>
+        </div>
+      </div>
+    </>
+  );
+};
+
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,7 +79,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [toast, setToast] = useState({ message: "", type: "" });
   const [isUnverified, setIsUnverified] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
@@ -44,10 +97,22 @@ const Login = () => {
     catch { redirectTo = redirectParam; }
   }
 
+  const showToast = (message, type = "error") => {
+    setToast({ message, type });
+    setTimeout(() => setToast({ message: "", type: "" }), type === "success" ? 5000 : 4000);
+  };
+
+  // ── Dismiss keyboard by blurring active input ──
+  const dismissKeyboard = () => {
+    if (document.activeElement) document.activeElement.blur();
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!email || !password) { setError("Please enter your email and password."); return; }
-    setError(""); setIsUnverified(false); setResendSuccess(false); setLoading(true);
+    dismissKeyboard(); // ← keyboard gone immediately
+
+    if (!email || !password) { showToast("Please enter your email and password.", "error"); return; }
+    setIsUnverified(false); setResendSuccess(false); setLoading(true);
 
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(), password,
@@ -57,12 +122,14 @@ const Login = () => {
       const msg = signInError.message?.toLowerCase() ?? "";
       if (msg.includes("email not confirmed") || msg.includes("not confirmed")) {
         setIsUnverified(true);
-        setError("Your email hasn't been verified yet. Please check your inbox and confirm your account before logging in.");
+        showToast("Your email hasn't been verified yet. Check your inbox and confirm before logging in.", "error");
       } else if (msg.includes("invalid login credentials") || msg.includes("invalid credentials")) {
-        setError("Incorrect email or password. Please try again.");
+        showToast("Incorrect email or password. Please try again.", "error");
       } else if (msg.includes("timeout") || signInError.status === 504) {
-        setError("Server timed out. Please try again in a moment.");
-      } else { setError(signInError.message); }
+        showToast("Server timed out. Please try again in a moment.", "error");
+      } else {
+        showToast(signInError.message, "error");
+      }
       setLoading(false); return;
     }
 
@@ -73,15 +140,15 @@ const Login = () => {
   };
 
   const handleResendVerification = async () => {
-    if (!email) { setError("Please enter your email address above so we can resend the verification."); return; }
+    if (!email) { showToast("Please enter your email address so we can resend the verification.", "error"); return; }
     setResendLoading(true); setResendSuccess(false);
     const { error: resendError } = await supabase.auth.resend({
       type: "signup", email: email.trim().toLowerCase(),
       options: { emailRedirectTo: `${window.location.origin}/email-confirmed` },
     });
     setResendLoading(false);
-    if (resendError) { setError("Failed to resend verification email. Please try again."); }
-    else { setResendSuccess(true); }
+    if (resendError) { showToast("Failed to resend verification email. Please try again.", "error"); }
+    else { setResendSuccess(true); showToast("Verification email sent — check your inbox.", "success"); }
   };
 
   if (authLoading) {
@@ -119,7 +186,6 @@ const Login = () => {
           0%, 100% { opacity: 1; } 50% { opacity: 0; }
         }
 
-        /* ── Scrollable container — keyboard won't push content off screen ── */
         .login-container {
           display: flex;
           justify-content: center;
@@ -235,16 +301,17 @@ const Login = () => {
           text-underline-offset: 2px;
         }
 
-        .login-error {
-          background: rgba(239, 68, 68, 0.08);
-          border: 1px solid rgba(239, 68, 68, 0.3);
+        .redirect-notice {
+          background: rgba(239,68,68,0.06);
+          border: 1px solid rgba(239,68,68,0.3);
           border-left: 3px solid #ef4444;
-          border-radius: 6px; padding: 10px 14px;
-          font-size: 0.74rem; color: #f87171; margin-top: 10px;
-          text-align: left; font-family: 'Share Tech Mono', monospace;
-          letter-spacing: 0.03em; line-height: 1.6;
+          border-radius: 6px; padding: 9px 13px;
+          font-size: 0.68rem; color: #f87171;
+          margin-bottom: 1.2rem; text-align: left;
+          font-family: 'Share Tech Mono', monospace; letter-spacing: 0.04em;
         }
 
+        /* ── Unverified inline block (resend button) ── */
         .login-unverified {
           background: rgba(239, 68, 68, 0.06);
           border: 1px solid rgba(239, 68, 68, 0.3);
@@ -275,16 +342,6 @@ const Login = () => {
           font-size: 0.7rem; color: #39ff14; margin-top: 7px;
           display: block; font-family: 'Share Tech Mono', monospace;
           letter-spacing: 0.05em;
-        }
-
-        .redirect-notice {
-          background: rgba(239,68,68,0.06);
-          border: 1px solid rgba(239,68,68,0.3);
-          border-left: 3px solid #ef4444;
-          border-radius: 6px; padding: 9px 13px;
-          font-size: 0.68rem; color: #f87171;
-          margin-bottom: 1.2rem; text-align: left;
-          font-family: 'Share Tech Mono', monospace; letter-spacing: 0.04em;
         }
 
         .login-button {
@@ -326,6 +383,12 @@ const Login = () => {
         }
       `}</style>
 
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: "", type: "" })}
+      />
+
       <div className="login-container">
         <form className="login-form" onSubmit={handleLogin} noValidate>
 
@@ -355,11 +418,9 @@ const Login = () => {
 
           <PasswordWhisper visible={passwordFocused} />
 
-          {error && !isUnverified && <div className="login-error">// {error}</div>}
-
           {isUnverified && (
             <div className="login-unverified">
-              <p>// {error}</p>
+              <p>// email not verified — check your inbox</p>
               <button type="button" className="resend-btn" onClick={handleResendVerification}
                 disabled={resendLoading || resendSuccess}>
                 {resendLoading ? "SENDING..." : "RESEND_VERIFICATION"}
