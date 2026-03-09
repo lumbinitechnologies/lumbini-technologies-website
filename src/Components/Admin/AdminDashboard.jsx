@@ -145,9 +145,7 @@ const buildOfferLetterPDF = (app) => {
   const CW = W - ML - MR;
   const FOOTER_Y = H - 14;
 
-  const issueDate = new Date().toLocaleDateString("en-IN", {
-    day: "numeric", month: "long", year: "numeric",
-  });
+  const issueDate = "18 February 2026";
   const refNo = `LT/OL/${new Date().getFullYear()}/${String(app.id || "001").slice(-4).padStart(4, "0")}`;
 
   doc.setFillColor(22, 49, 120);
@@ -224,7 +222,7 @@ const buildOfferLetterPDF = (app) => {
     ["Duration",     "2 Months"],
     ["Mode",         "Hybrid / As Mutually Discussed"],
     ["Stipend",      "As per internship policy"],
-    ["Start Date",   "As communicated separately"],
+    ["Start Date",   "18 February 2026"],
   ];
   const TABLE_H = rows.length * ROW_H + 9;
 
