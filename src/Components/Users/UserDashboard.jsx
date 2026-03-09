@@ -56,13 +56,26 @@ const UserDashboard = () => {
     finally { setAppsLoading(false); }
   };
 
+  // ✅ FIXED: look up intern by user_id (auth ID), not email
+  // Email lookup was unreliable — admin creates interns with user_id from applications.user_id
   const fetchDocuments = async () => {
     if (!user) return;
     setDocsLoading(true);
     try {
-      const { data: intern } = await supabase.from("interns").select("id").eq("email", user.email).maybeSingle();
-      if (!intern) { setDocuments([]); return; }
-      const { data, error } = await supabase.from("documents").select("*").eq("intern_id", intern.id).order("created_at", { ascending: false });
+      const { data: intern, error: internError } = await supabase
+        .from("interns")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (internError || !intern) { setDocuments([]); return; }
+
+      const { data, error } = await supabase
+        .from("documents")
+        .select("*")
+        .eq("intern_id", intern.id)
+        .order("created_at", { ascending: false });
+
       setDocuments(error ? [] : data || []);
     } catch { setDocuments([]); }
     finally { setDocsLoading(false); }
@@ -172,7 +185,6 @@ const UserDashboard = () => {
           opacity: 0.5;
         }
 
-        /* bg glow top */
         .ud-profile-card::after {
           content: '';
           position: absolute; top: -30px; left: 50%; transform: translateX(-50%);

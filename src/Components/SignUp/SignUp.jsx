@@ -87,18 +87,32 @@ const Signup = () => {
         email: email.trim().toLowerCase(), password,
         options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}/email-confirmed` },
       });
+
       if (error) {
         if (error.status === 504 || error.message?.toLowerCase().includes("timeout")) {
           showToast("Server timed out. Please try again in a moment.", "error");
-        } else { showToast(error.message, "error"); }
+        } else {
+          showToast(error.message, "error");
+        }
         return;
       }
+
+      // Supabase silently "succeeds" for existing emails — identities array is empty in that case
+      if (data?.user && data.user.identities?.length === 0) {
+        showToast("An account with this email already exists. Please log in instead.", "error");
+        return;
+      }
+
       showToast("Account created! Please check your email and verify your account before logging in.", "success");
     } catch (err) {
       if (err.name === "AbortError" || err.message?.toLowerCase().includes("timeout")) {
         showToast("Request timed out. Please check your connection and try again.", "error");
-      } else { showToast("Something went wrong. Please try again.", "error"); }
-    } finally { setLoading(false); }
+      } else {
+        showToast("Something went wrong. Please try again.", "error");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -335,7 +349,12 @@ const Signup = () => {
             )}
           </div>
 
-          <button type="submit" className="signup-button" disabled={loading}>
+          <button
+            type="submit"
+            className="signup-button"
+            disabled={loading}
+            onMouseDown={(e) => e.preventDefault()}
+          >
             {loading ? "INITIALIZING..." : "SIGN UP"}
           </button>
 

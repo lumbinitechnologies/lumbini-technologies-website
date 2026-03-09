@@ -376,6 +376,9 @@ const STATUS_CONFIG = {
 };
 
 // ── Supabase helpers ──────────────────────────────────────────────────────────
+
+// ✅ FIXED: now includes user_id from app so interns.user_id is never NULL
+// Without user_id, UserDashboard's .eq("user_id", user.id) lookup always fails
 const getOrCreateIntern = async (app) => {
   const { data: existing } = await supabase
     .from("interns")
@@ -387,10 +390,11 @@ const getOrCreateIntern = async (app) => {
     .from("interns")
     .insert({
       application_id: app.id,
-      name: app.name,
-      email: app.email,
-      start_date: new Date().toISOString().split("T")[0],
-      end_date: null,
+      user_id:        app.user_id,   // ← ADDED: links intern to auth.users.id
+      name:           app.name,
+      email:          app.email,
+      start_date:     new Date().toISOString().split("T")[0],
+      end_date:       null,
     })
     .select("id")
     .single();

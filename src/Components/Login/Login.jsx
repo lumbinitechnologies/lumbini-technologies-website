@@ -44,7 +44,9 @@ const Login = () => {
     catch { redirectTo = redirectParam; }
   }
 
-  const handleLogin = async () => {
+  // ── Single submit handler on the <form> — fixes double-click bug ──
+  const handleLogin = async (e) => {
+    e.preventDefault();
     if (!email || !password) { setError("Please enter your email and password."); return; }
     setError(""); setIsUnverified(false); setResendSuccess(false); setLoading(true);
 
@@ -232,7 +234,6 @@ const Login = () => {
           text-underline-offset: 2px;
         }
 
-        /* ── Error block ── */
         .login-error {
           background: rgba(239, 68, 68, 0.08);
           border: 1px solid rgba(239, 68, 68, 0.3);
@@ -243,7 +244,6 @@ const Login = () => {
           letter-spacing: 0.03em; line-height: 1.6;
         }
 
-        /* ── Unverified block — red text, red border ── */
         .login-unverified {
           background: rgba(239, 68, 68, 0.06);
           border: 1px solid rgba(239, 68, 68, 0.3);
@@ -326,7 +326,8 @@ const Login = () => {
       `}</style>
 
       <div className="login-container">
-        <div className="login-form">
+        {/* ── form onSubmit handles both Enter key and button click ── */}
+        <form className="login-form" onSubmit={handleLogin} noValidate>
 
           <div className="login-tbar">
             <span className="login-tbar-dot" style={{ background: "#ff5f57" }} />
@@ -344,11 +345,10 @@ const Login = () => {
 
           <input type="email" placeholder="email_address" className="login-input"
             value={email} onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleLogin()} disabled={loading} />
+            disabled={loading} />
 
           <input type="password" placeholder="password" className="login-input"
             value={password} onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
             onFocus={() => setPasswordFocused(true)}
             onBlur={() => setPasswordFocused(false)}
             disabled={loading} />
@@ -360,7 +360,7 @@ const Login = () => {
           {isUnverified && (
             <div className="login-unverified">
               <p>// {error}</p>
-              <button className="resend-btn" onClick={handleResendVerification}
+              <button type="button" className="resend-btn" onClick={handleResendVerification}
                 disabled={resendLoading || resendSuccess}>
                 {resendLoading ? "SENDING..." : "RESEND_VERIFICATION"}
               </button>
@@ -368,14 +368,19 @@ const Login = () => {
             </div>
           )}
 
-          <button className="login-button" onClick={handleLogin} disabled={loading}>
+          <button
+            type="submit"
+            className="login-button"
+            disabled={loading}
+            onMouseDown={(e) => e.preventDefault()}
+          >
             {loading ? "AUTHENTICATING..." : "LOGIN"}
           </button>
 
           <p className="login-footer">
             no account? <Link to="/signup">SIGN UP</Link>
           </p>
-        </div>
+        </form>
       </div>
     </>
   );
