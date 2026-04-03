@@ -836,6 +836,7 @@ const AdminDashboard = () => {
                   <tr>
                     <th>#</th>
                     <th>IP Address</th>
+                    <th>Location</th>
                     <th>Device</th>
                     <th>Browser</th>
                     <th>Time</th>
@@ -844,7 +845,7 @@ const AdminDashboard = () => {
                 <tbody>
                   {visitors.length === 0 ? (
                     <tr>
-                      <td colSpan={5} style={{ textAlign: "center", padding: "30px", color: "rgba(255,255,255,0.1)" }}>
+                      <td colSpan={6} style={{ textAlign: "center", padding: "30px", color: "rgba(255,255,255,0.1)" }}>
                         // no visitor logs yet
                       </td>
                     </tr>
@@ -863,6 +864,7 @@ const AdminDashboard = () => {
                             </span>
                           )}
                         </td>
+                        <td className="adm-log-device">🌍 {v.city || "—"}, {v.country || "—"}</td>
                         <td className="adm-log-device">{parseDevice(v.user_agent)}</td>
                         <td className="adm-log-device">{parseBrowser(v.user_agent)}</td>
                         <td className="adm-log-time">{fmtTime(v.visited_at)}</td>
