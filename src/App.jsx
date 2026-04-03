@@ -45,9 +45,19 @@ const TermsAndConditions = lazy(() => import("./Components/TermsAndConditions/Te
 // ── Scroll to top on route change ─────────────────────────────────────────────
 const ScrollToTop = () => {
   const { pathname } = useLocation();
+
   useEffect(() => {
     window.scrollTo(0, 0);
+
+    if (!sessionStorage.getItem("tracked")) {
+      fetch("https://etcalajnegfqeykeegie.supabase.co/functions/v1/track-visitor", {
+        method: "POST",
+      });
+      sessionStorage.setItem("tracked", "true");
+    }
+
   }, [pathname]);
+
   return null;
 };
 

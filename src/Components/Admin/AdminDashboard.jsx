@@ -55,27 +55,15 @@ const buildCertificatePDF = (app) => {
 
   let y = 97;
   const paras = [
-    "In recognition and appreciation of the dedication, hard work, and valuable contributions made during the internship at " +
-      company +
-      ".",
-    "During the internship period, " +
-      name +
-      " served as a " +
-      role +
-      " and consistently displayed a strong sense of responsibility, professionalism, and commitment to excellence.",
-    name +
-      " showed initiative, creativity, and a positive attitude while contributing to various tasks and responsibilities within the organization.",
-    "The management and staff of " +
-      company +
-      " greatly appreciate the hard work and dedication shown during this period.",
+    "In recognition and appreciation of the dedication, hard work, and valuable contributions made during the internship at " + company + ".",
+    "During the internship period, " + name + " served as a " + role + " and consistently displayed a strong sense of responsibility, professionalism, and commitment to excellence.",
+    name + " showed initiative, creativity, and a positive attitude while contributing to various tasks and responsibilities within the organization.",
+    "The management and staff of " + company + " greatly appreciate the hard work and dedication shown during this period.",
     "We extend our best wishes for a bright and successful career ahead.",
   ];
   paras.forEach((para) => {
     const lines = doc.splitTextToSize(para, CONTENT_W);
-    lines.forEach((line) => {
-      doc.text(line, CONTENT_X, y);
-      y += LINE_H;
-    });
+    lines.forEach((line) => { doc.text(line, CONTENT_X, y); y += LINE_H; });
     y += 4;
   });
 
@@ -117,11 +105,7 @@ const buildCertificatePDF = (app) => {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7.5);
   doc.setTextColor(255, 255, 255);
-  doc.text(
-    "Flat No. 9, 3rd Floor, A Block, Sarvani Towers,",
-    14,
-    H - FOOTER_H + 7,
-  );
+  doc.text("Flat No. 9, 3rd Floor, A Block, Sarvani Towers,", 14, H - FOOTER_H + 7);
   doc.setFont("helvetica", "normal");
   doc.text("Siddhartha Nagar, Vijayawada - 520010.", 14, H - FOOTER_H + 13);
   const rightX = W / 2 + 12;
@@ -374,9 +358,6 @@ const STATUS_CONFIG = {
 };
 
 // ── Supabase helpers ──────────────────────────────────────────────────────────
-
-// ✅ Intern record is ONLY created when status becomes "selected".
-// This function should never be called for pending/shortlisted applicants.
 const getOrCreateIntern = async (app) => {
   const { data: existing } = await supabase
     .from("interns")
@@ -400,8 +381,6 @@ const getOrCreateIntern = async (app) => {
   return created.id;
 };
 
-// ✅ Looks up an existing intern without creating one.
-// Used during document generation so we never create phantom interns.
 const getExistingInternId = async (applicationId) => {
   const { data } = await supabase
     .from("interns")
@@ -433,6 +412,23 @@ const uploadAndSaveDocument = async (pdfBlob, _fileName, internId, documentType)
   return fileUrl;
 };
 
+// ── Helper: parse user agent into readable device string ──────────────────────
+const parseDevice = (ua = "") => {
+  if (!ua) return "Unknown";
+  if (/mobile/i.test(ua))  return "📱 Mobile";
+  if (/tablet/i.test(ua))  return "📟 Tablet";
+  return "🖥️ Desktop";
+};
+
+const parseBrowser = (ua = "") => {
+  if (!ua) return "";
+  if (/edg/i.test(ua))     return "Edge";
+  if (/chrome/i.test(ua))  return "Chrome";
+  if (/firefox/i.test(ua)) return "Firefox";
+  if (/safari/i.test(ua))  return "Safari";
+  return "Browser";
+};
+
 // ── Component ─────────────────────────────────────────────────────────────────
 const AdminDashboard = () => {
   const [applications, setApplications] = useState([]);
@@ -446,13 +442,57 @@ const AdminDashboard = () => {
   const [toast, setToast] = useState(null);
   const [documents, setDocuments] = useState([]);
 
-  useEffect(() => { fetchApplications(); }, []);
+  // ── Visitor stats ──────────────────────────────────────────────────────────
+  const [totalVisitors, setTotalVisitors]   = useState(0);
+  const [uniqueVisitors, setUniqueVisitors] = useState(0);
+  const [todayVisitors, setTodayVisitors]   = useState(0);
+  const [visitors, setVisitors]             = useState([]);
+  const [showVisitorLog, setShowVisitorLog] = useState(false);
+
+  useEffect(() => {
+    fetchApplications();
+    fetchVisitorStats();
+  }, []);
+
+  const fetchVisitorStats = async () => {
+    try {
+      // Total
+      const { count: total } = await supabase
+        .from("visitors")
+        .select("*", { count: "exact", head: true });
+      setTotalVisitors(total || 0);
+
+      // Unique IPs
+      const { data: ipData } = await supabase
+        .from("visitors")
+        .select("ip_address");
+      if (ipData) {
+        const uniqueIPs = new Set(ipData.map((v) => v.ip_address));
+        setUniqueVisitors(uniqueIPs.size);
+      }
+
+      // Today
+      const today = new Date().toISOString().split("T")[0];
+      const { count: todayCount } = await supabase
+        .from("visitors")
+        .select("*", { count: "exact", head: true })
+        .gte("visited_at", today);
+      setTodayVisitors(todayCount || 0);
+
+      // Full log (latest 50)
+      const { data: logData } = await supabase
+        .from("visitors")
+        .select("*")
+        .order("visited_at", { ascending: false })
+        .limit(50);
+      setVisitors(logData || []);
+    } catch (e) {
+      console.warn("[AdminDashboard] Could not fetch visitor stats:", e.message);
+    }
+  };
 
   useEffect(() => {
     if (!selected) { setDocuments([]); return; }
-
-    // ✅ Only fetch documents if the applicant is already selected (has an intern record).
-    // No intern creation here — just a read.
     const fetchDocs = async () => {
       try {
         const internId = await getExistingInternId(selected.id);
@@ -484,22 +524,16 @@ const AdminDashboard = () => {
     }
   };
 
-  // ✅ Intern record is created HERE — only when status becomes "selected".
   const updateStatus = async (id, status) => {
     setUpdating(id + status);
     await supabase.from("applications").update({ status }).eq("id", id);
-
     if (status === "selected") {
       const app = applications.find((a) => a.id === id);
       if (app) {
-        try {
-          await getOrCreateIntern({ ...app, status: "selected" });
-        } catch (e) {
-          console.warn("[AdminDashboard] Could not create intern on selection:", e.message);
-        }
+        try { await getOrCreateIntern({ ...app, status: "selected" }); }
+        catch (e) { console.warn("[AdminDashboard] Could not create intern:", e.message); }
       }
     }
-
     await fetchApplications();
     if (selected?.id === id) setSelected((prev) => ({ ...prev, status }));
     setUpdating(null);
@@ -515,20 +549,13 @@ const AdminDashboard = () => {
     if (!selected) return;
     setSending(`${selected.id}:${type}`);
     try {
-      const doc =
-        type === "offer"
-          ? buildOfferLetterPDF(selected)
-          : buildCertificatePDF(selected);
+      const doc = type === "offer" ? buildOfferLetterPDF(selected) : buildCertificatePDF(selected);
       const labelMap = { offer: "Offer_Letter", certificate: "Certificate" };
       const downloadName = `${selected.name?.replace(/\s+/g, "_")}_${labelMap[type]}.pdf`;
       doc.save(`${Date.now()}_${downloadName}`);
-
-      // ✅ Document upload: look up existing intern only — never create one here.
-      // If the applicant isn't selected yet, internId will be null and upload is skipped.
       try {
         const internId = await getExistingInternId(selected.id);
         if (!internId) {
-          console.warn("[AdminDashboard] No intern record found — document not saved to DB.");
           showToast(`${labelMap[type].replace("_", " ")} downloaded ✓ (not saved — applicant not selected)`);
           return;
         }
@@ -568,13 +595,16 @@ const AdminDashboard = () => {
   };
 
   const fmt = (d) =>
-    d
-      ? new Date(d).toLocaleDateString("en-IN", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
-      : "—";
+    d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
+
+  const fmtTime = (d) =>
+    d ? new Date(d).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
+
+  // Detect repeated IPs (visited more than once)
+  const ipCounts = {};
+  visitors.forEach((v) => {
+    ipCounts[v.ip_address] = (ipCounts[v.ip_address] || 0) + 1;
+  });
 
   return (
     <>
@@ -595,7 +625,6 @@ const AdminDashboard = () => {
           padding: 18px 36px; border-bottom: 1px solid rgba(250,204,21,0.08);
           background: #040404; position: sticky; top: 70px; z-index: 50;
         }
-
         .adm-logo { display: flex; align-items: center; gap: 10px; font-size: 1rem; font-weight: 800; color: #fff; letter-spacing: 0.04em; }
         .adm-logo-dot { width: 10px; height: 10px; border-radius: 50%; background: #facc15; box-shadow: 0 0 10px rgba(250,204,21,0.6); animation: pulse 2s infinite; }
         @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(.85)} }
@@ -609,6 +638,50 @@ const AdminDashboard = () => {
 
         .adm-body { padding: 32px 36px; max-width: 1400px; margin: 0 auto; }
 
+        .adm-section-label {
+          font-size: 10px; font-family: 'JetBrains Mono', monospace;
+          color: rgba(255,255,255,0.15); text-transform: uppercase;
+          letter-spacing: .12em; margin-bottom: 10px; margin-top: 4px;
+        }
+
+        /* ── Visitor strip ── */
+        .adm-visitor-strip { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 16px; }
+        .adm-visitor-card {
+          background: rgba(250,204,21,0.04); border: 1px solid rgba(250,204,21,0.12);
+          border-radius: 10px; padding: 14px 20px; display: flex; align-items: center; gap: 14px;
+        }
+        .adm-visitor-icon { font-size: 1.4rem; line-height: 1; }
+        .adm-visitor-label { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: rgba(250,204,21,0.45); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 3px; }
+        .adm-visitor-num { font-size: 1.5rem; font-weight: 800; color: #facc15; line-height: 1; }
+
+        /* ── Visitor log toggle ── */
+        .adm-log-toggle {
+          display: inline-flex; align-items: center; gap: 7px;
+          font-size: 11px; font-family: 'JetBrains Mono', monospace;
+          color: rgba(250,204,21,0.5); cursor: pointer; margin-bottom: 20px;
+          background: none; border: 1px solid rgba(250,204,21,0.15);
+          padding: 6px 14px; border-radius: 6px; transition: all 0.2s;
+        }
+        .adm-log-toggle:hover { color: #facc15; border-color: rgba(250,204,21,0.4); }
+
+        /* ── Visitor log table ── */
+        .adm-log-wrap {
+          background: rgba(255,255,255,0.015); border: 1px solid rgba(250,204,21,0.08);
+          border-radius: 12px; overflow: hidden; margin-bottom: 28px;
+        }
+        .adm-log-table { width: 100%; border-collapse: collapse; }
+        .adm-log-table thead tr { background: rgba(250,204,21,0.04); border-bottom: 1px solid rgba(250,204,21,0.08); }
+        .adm-log-table th { padding: 10px 14px; text-align: left; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: rgba(250,204,21,0.35); text-transform: uppercase; letter-spacing: .1em; }
+        .adm-log-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.15s; }
+        .adm-log-table tbody tr:last-child { border-bottom: none; }
+        .adm-log-table tbody tr:hover { background: rgba(250,204,21,0.02); }
+        .adm-log-table td { padding: 10px 14px; font-size: 12px; font-family: 'JetBrains Mono', monospace; color: #475569; vertical-align: middle; }
+        .adm-log-ip { color: #94a3b8; font-weight: 600; }
+        .adm-log-repeat { color: #f87171; font-size: 10px; margin-left: 6px; }
+        .adm-log-device { color: #64748b; }
+        .adm-log-time { color: rgba(255,255,255,0.2); font-size: 11px; }
+
+        /* ── Application stats ── */
         .adm-stats { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 28px; }
         .adm-stat {
           background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px;
@@ -689,13 +762,19 @@ const AdminDashboard = () => {
         .adm-toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:#facc15; color:#000; font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; padding:10px 22px; border-radius:999px; z-index:200; animation:toastIn .3s ease; white-space:nowrap; }
         @keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(12px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
 
-        @media (max-width:1024px) { .adm-stats{grid-template-columns:repeat(3,1fr)} }
+        @media (max-width:1024px) {
+          .adm-stats { grid-template-columns: repeat(3,1fr); }
+          .adm-visitor-strip { grid-template-columns: repeat(2,1fr); }
+        }
         @media (max-width:768px) {
           .adm { padding-top: 60px; }
           .adm-topbar { top: 60px; padding:14px 16px; }
-          .adm-body{padding:20px 16px}
-          .adm-stats{grid-template-columns:repeat(2,1fr)} .adm-drawer{width:100%}
-          .adm-table th:nth-child(3), .adm-table td:nth-child(3){display:none}
+          .adm-body { padding:20px 16px; }
+          .adm-stats { grid-template-columns: repeat(2,1fr); }
+          .adm-visitor-strip { grid-template-columns: 1fr; }
+          .adm-drawer { width:100%; }
+          .adm-table th:nth-child(3), .adm-table td:nth-child(3) { display:none; }
+          .adm-log-table th:nth-child(2), .adm-log-table td:nth-child(2) { display:none; }
         }
       `}</style>
 
@@ -705,12 +784,98 @@ const AdminDashboard = () => {
             <div className="adm-logo-dot" />
             Lumbini Admin
           </div>
-          <button className="adm-refresh-btn" onClick={fetchApplications}>
+          <button
+            className="adm-refresh-btn"
+            onClick={() => { fetchApplications(); fetchVisitorStats(); }}
+          >
             ↻ Refresh
           </button>
         </div>
 
         <div className="adm-body">
+
+          {/* ── Site Analytics ── */}
+          <div className="adm-section-label">Site Analytics</div>
+          <div className="adm-visitor-strip">
+            <div className="adm-visitor-card">
+              <div className="adm-visitor-icon">👁️</div>
+              <div>
+                <div className="adm-visitor-label">Total Visits</div>
+                <div className="adm-visitor-num">{totalVisitors}</div>
+              </div>
+            </div>
+            <div className="adm-visitor-card">
+              <div className="adm-visitor-icon">🧑‍💻</div>
+              <div>
+                <div className="adm-visitor-label">Unique Visitors</div>
+                <div className="adm-visitor-num">{uniqueVisitors}</div>
+              </div>
+            </div>
+            <div className="adm-visitor-card">
+              <div className="adm-visitor-icon">📅</div>
+              <div>
+                <div className="adm-visitor-label">Today</div>
+                <div className="adm-visitor-num">{todayVisitors}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Visitor Log toggle ── */}
+          <button
+            className="adm-log-toggle"
+            onClick={() => setShowVisitorLog((v) => !v)}
+          >
+            {showVisitorLog ? "▲ Hide" : "▼ Show"} Visitor Log ({visitors.length})
+          </button>
+
+          {/* ── Visitor Log table ── */}
+          {showVisitorLog && (
+            <div className="adm-log-wrap">
+              <table className="adm-log-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>IP Address</th>
+                    <th>Device</th>
+                    <th>Browser</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visitors.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: "center", padding: "30px", color: "rgba(255,255,255,0.1)" }}>
+                        // no visitor logs yet
+                      </td>
+                    </tr>
+                  ) : visitors.map((v, i) => {
+                    const isRepeat = ipCounts[v.ip_address] > 1;
+                    return (
+                      <tr key={v.id || i}>
+                        <td style={{ color: "rgba(255,255,255,0.1)", fontSize: 11 }}>{i + 1}</td>
+                        <td>
+                          <span className="adm-log-ip">
+                            {v.ip_address || "—"}
+                          </span>
+                          {isRepeat && (
+                            <span className="adm-log-repeat">
+                              ×{ipCounts[v.ip_address]}
+                            </span>
+                          )}
+                        </td>
+                        <td className="adm-log-device">{parseDevice(v.user_agent)}</td>
+                        <td className="adm-log-device">{parseBrowser(v.user_agent)}</td>
+                        <td className="adm-log-time">{fmtTime(v.visited_at)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* ── Applications ── */}
+          <div className="adm-section-label">Applications</div>
           <div className="adm-stats">
             {[
               { key: "all",         label: "Total",       accent: "#facc15" },
@@ -816,6 +981,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
+      {/* ── Drawer ── */}
       {selected && (() => {
         const s = STATUS_CONFIG[selected.status] || STATUS_CONFIG.pending;
         const isSelected = selected.status === "selected";
@@ -828,7 +994,10 @@ const AdminDashboard = () => {
               <div className="adm-drawer-name">{selected.name || "—"}</div>
               <div className="adm-drawer-email">{selected.email}</div>
 
-              <span className="adm-status-badge" style={{ "--sbg": s.bg, "--sc": s.color, marginBottom: "20px", display: "inline-flex" }}>
+              <span
+                className="adm-status-badge"
+                style={{ "--sbg": s.bg, "--sc": s.color, marginBottom: "20px", display: "inline-flex" }}
+              >
                 <span className="adm-status-dot" />
                 {s.label}
               </span>
@@ -875,10 +1044,16 @@ const AdminDashboard = () => {
                 </div>
               )}
 
+              {/* ── FIX 1: Resume link ── */}
               {selected.resume_url && (
                 <div className="adm-drawer-section">
                   <div className="adm-drawer-section-title">Resume</div>
-                  <a href={selected.resume_url} target="_blank" rel="noopener noreferrer" className="adm-drawer-resume-btn">
+                  <a
+                    href={selected.resume_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="adm-drawer-resume-btn"
+                  >
                     ↗ View Resume (PDF)
                   </a>
                 </div>
@@ -890,7 +1065,6 @@ const AdminDashboard = () => {
                 <button className="adm-action-btn btn-reject"    disabled={selected.status === "rejected"    || !!updating} onClick={() => updateStatus(selected.id, "rejected")}>Reject</button>
               </div>
 
-              {/* ✅ Documents section — only shown for selected applicants */}
               <div className="adm-docs-divider">Documents</div>
               {!isSelected ? (
                 <div className="adm-docs-gate">
@@ -912,14 +1086,23 @@ const AdminDashboard = () => {
                           ? "Generating..."
                           : offerDoc ? "↺ Regenerate Offer Letter" : "Generate Offer Letter"}
                       </button>
+                      {/* ── FIX 2: Offer Letter view link ── */}
                       {offerDoc && (
                         <a
                           href={offerDoc.file_url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="adm-action-btn"
-                          style={{ background: "rgba(96,165,250,0.07)", border: "1px solid rgba(96,165,250,0.2)", color: "#60a5fa", textDecoration: "none", whiteSpace: "nowrap" }}
-                        >↗ View</a>
+                          style={{
+                            background: "rgba(96,165,250,0.07)",
+                            border: "1px solid rgba(96,165,250,0.2)",
+                            color: "#60a5fa",
+                            textDecoration: "none",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          ↗ View
+                        </a>
                       )}
                     </div>
                     {offerDoc && (
@@ -939,14 +1122,23 @@ const AdminDashboard = () => {
                           ? "Generating..."
                           : certDoc ? "↺ Regenerate Certificate" : "Generate Certificate"}
                       </button>
+                      {/* ── FIX 3: Certificate view link ── */}
                       {certDoc && (
                         <a
                           href={certDoc.file_url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="adm-action-btn"
-                          style={{ background: "rgba(96,165,250,0.07)", border: "1px solid rgba(96,165,250,0.2)", color: "#60a5fa", textDecoration: "none", whiteSpace: "nowrap" }}
-                        >↗ View</a>
+                          style={{
+                            background: "rgba(96,165,250,0.07)",
+                            border: "1px solid rgba(96,165,250,0.2)",
+                            color: "#60a5fa",
+                            textDecoration: "none",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          ↗ View
+                        </a>
                       )}
                     </div>
                     {certDoc && (
