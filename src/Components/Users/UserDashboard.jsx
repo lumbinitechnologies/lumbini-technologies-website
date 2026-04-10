@@ -34,6 +34,7 @@ const UserDashboard = () => {
   const [documents, setDocuments] = useState([]);
   const [docsLoading, setDocsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("applications");
+  const [internData, setInternData] = useState(null);
 
   useAuthGuard("/Login");
 
@@ -56,19 +57,19 @@ const UserDashboard = () => {
     finally { setAppsLoading(false); }
   };
 
-  // ✅ FIXED: look up intern by user_id (auth ID), not email
-  // Email lookup was unreliable — admin creates interns with user_id from applications.user_id
   const fetchDocuments = async () => {
     if (!user) return;
     setDocsLoading(true);
     try {
       const { data: intern, error: internError } = await supabase
         .from("interns")
-        .select("id")
+        .select("id, intern_id")
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (internError || !intern) { setDocuments([]); return; }
+
+      setInternData(intern);
 
       const { data, error } = await supabase
         .from("documents")
@@ -116,12 +117,6 @@ const UserDashboard = () => {
           97%            { opacity:0.8; text-shadow: -3px 0 #facc15; }
         }
 
-        @keyframes greenGlitch {
-          0%, 93%, 100% { opacity:1; text-shadow: 0 0 10px #39ff14; }
-          94%            { opacity:0.2; text-shadow: 4px 0 #39ff14; }
-          97%            { opacity:0.8; text-shadow: -3px 0 #39ff14; }
-        }
-
         @keyframes scanline {
           0%   { transform: translateY(-100%); }
           100% { transform: translateY(100vh); }
@@ -137,7 +132,11 @@ const UserDashboard = () => {
           50%       { box-shadow: 0 0 14px var(--sc), 0 0 28px var(--sc); }
         }
 
-        /* ── Base ── */
+        @keyframes internIdGlow {
+          0%, 100% { box-shadow: 0 0 8px rgba(57,255,20,0.3); }
+          50%       { box-shadow: 0 0 20px rgba(57,255,20,0.6), 0 0 40px rgba(57,255,20,0.2); }
+        }
+
         .ud {
           min-height: 100vh;
           background: #050505;
@@ -155,7 +154,6 @@ const UserDashboard = () => {
           pointer-events: none; z-index: 200;
         }
 
-        /* ── Layout ── */
         .ud-grid {
           display: grid;
           grid-template-columns: 260px 1fr;
@@ -164,7 +162,6 @@ const UserDashboard = () => {
           padding: 0 clamp(1rem, 4vw, 2.5rem);
         }
 
-        /* ── Sidebar ── */
         .ud-sidebar {
           display: flex; flex-direction: column; gap: 14px;
           position: sticky; top: 90px; align-self: start;
@@ -229,7 +226,35 @@ const UserDashboard = () => {
         .ud-profile-stat-label { color: rgba(255,255,255,0.2); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; }
         .ud-profile-stat-val   { font-weight: 700; font-size: 0.75rem; }
 
-        /* ── Nav ── */
+        /* ── Intern ID Card ── */
+        .ud-intern-id-card {
+          background: rgba(57,255,20,0.03);
+          border: 1px solid rgba(57,255,20,0.2);
+          border-radius: 14px; padding: 18px;
+          position: relative; overflow: hidden;
+          animation: fadeUp 0.4s ease 0.05s forwards; opacity: 0;
+          text-align: center;
+        }
+
+        .ud-intern-id-card::before {
+          content: '';
+          position: absolute; top: 0; left: 0; right: 0; height: 2px;
+          background: linear-gradient(90deg, transparent, #39ff14, transparent);
+          opacity: 0.4;
+        }
+
+        .ud-intern-id-label {
+          font-size: 0.58rem; color: rgba(57,255,20,0.5);
+          text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 10px;
+        }
+
+        .ud-intern-id-value {
+          font-family: 'Orbitron', monospace;
+          font-size: 1rem; font-weight: 900; color: #39ff14;
+          letter-spacing: 2px;
+          animation: internIdGlow 3s ease-in-out infinite;
+        }
+
         .ud-nav {
           background: rgba(255,255,255,0.02);
           border: 1px solid rgba(255,255,255,0.06);
@@ -280,10 +305,8 @@ const UserDashboard = () => {
           color: #f87171;
         }
 
-        /* ── Main ── */
         .ud-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 
-        /* Welcome */
         .ud-welcome {
           background: rgba(255,255,255,0.02);
           border: 1px solid rgba(250,204,21,0.15);
@@ -329,7 +352,6 @@ const UserDashboard = () => {
         }
         .ud-apply-btn:hover { background: #fde047; transform: translateY(-2px); box-shadow: 0 6px 24px rgba(250,204,21,0.4); }
 
-        /* Status banner */
         .ud-status-banner {
           border-radius: 12px; padding: 18px 22px;
           display: flex; align-items: center; gap: 14px;
@@ -359,7 +381,6 @@ const UserDashboard = () => {
 
         .ud-status-banner-msg { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
 
-        /* Status badge */
         .ud-status-badge {
           display: inline-flex; align-items: center; gap: 6px;
           padding: 4px 10px; border-radius: 999px;
@@ -378,7 +399,6 @@ const UserDashboard = () => {
           animation: statusPulse 2s ease-in-out infinite;
         }
 
-        /* Section title */
         .ud-section-title {
           font-size: 0.6rem; color: rgba(57,255,20,0.45);
           text-transform: uppercase; letter-spacing: 0.2em;
@@ -391,7 +411,6 @@ const UserDashboard = () => {
           background: linear-gradient(90deg, rgba(57,255,20,0.15), transparent);
         }
 
-        /* App cards */
         .ud-app-card {
           background: rgba(255,255,255,0.015);
           border: 1px solid var(--ac-border);
@@ -416,7 +435,6 @@ const UserDashboard = () => {
         .ud-app-card-skills { font-size: 0.65rem; color: rgba(255,255,255,0.25); margin-top: 6px; }
         .ud-app-card-date  { font-size: 0.62rem; color: rgba(255,255,255,0.15); margin-top: 5px; }
 
-        /* Detail panel */
         .ud-detail {
           background: rgba(255,255,255,0.02);
           border: 1px solid rgba(250,204,21,0.12);
@@ -428,7 +446,6 @@ const UserDashboard = () => {
         .ud-detail-title { font-family: 'Orbitron', monospace; font-size: 0.9rem; font-weight: 700; color: #fff; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
         .ud-detail-sub { font-size: 0.62rem; color: rgba(255,255,255,0.25); }
 
-        /* Timeline */
         .ud-timeline { display: flex; align-items: center; margin-bottom: 18px; overflow-x: auto; padding-bottom: 4px; }
 
         .ud-tl-step { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 60px; position: relative; }
@@ -450,7 +467,6 @@ const UserDashboard = () => {
 
         .ud-tl-label { font-size: 0.58rem; color: var(--tl-labelcolor, rgba(255,255,255,0.2)); margin-top: 5px; text-align: center; text-transform: uppercase; letter-spacing: 0.07em; }
 
-        /* Detail grid */
         .ud-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
 
         .ud-detail-field {
@@ -477,7 +493,6 @@ const UserDashboard = () => {
         }
         .ud-resume-btn:hover { background: rgba(250,204,21,0.14); border-color: #facc15; }
 
-        /* Documents */
         .ud-docs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
 
         .ud-doc-card {
@@ -513,12 +528,10 @@ const UserDashboard = () => {
         .ud-docs-empty-icon { font-size: 2rem; opacity: 0.2; margin-bottom: 10px; }
         .ud-docs-empty-text { font-size: 0.68rem; color: rgba(255,255,255,0.2); line-height: 1.7; }
 
-        /* Empty state */
         .ud-empty { background: rgba(255,255,255,0.015); border: 1px dashed rgba(250,204,21,0.12); border-radius: 14px; padding: 48px 24px; text-align: center; }
         .ud-empty-icon { font-size: 2.5rem; opacity: 0.2; margin-bottom: 12px; }
         .ud-empty-text { font-size: 0.7rem; color: rgba(255,255,255,0.2); margin-bottom: 20px; }
 
-        /* Error */
         .ud-error {
           background: rgba(248,113,113,0.05);
           border: 1px solid rgba(248,113,113,0.2);
@@ -527,11 +540,11 @@ const UserDashboard = () => {
           color: #fca5a5; font-size: 0.68rem; letter-spacing: 0.03em;
         }
 
-        /* ── Responsive ── */
         @media (max-width: 900px) {
           .ud-grid { grid-template-columns: 1fr; }
           .ud-sidebar { position: static; flex-direction: row; flex-wrap: wrap; }
           .ud-profile-card { flex: 1; min-width: 200px; }
+          .ud-intern-id-card { flex: 1; min-width: 200px; }
           .ud-nav { flex: 1; min-width: 200px; flex-direction: row; flex-wrap: wrap; }
           .ud-detail-grid { grid-template-columns: 1fr; }
           .ud-docs-grid { grid-template-columns: 1fr; }
@@ -563,6 +576,14 @@ const UserDashboard = () => {
                 </div>
               ))}
             </div>
+
+            {/* ── Intern ID Card ── */}
+            {internData?.intern_id && (
+              <div className="ud-intern-id-card">
+                <div className="ud-intern-id-label">// intern.id</div>
+                <div className="ud-intern-id-value">{internData.intern_id}</div>
+              </div>
+            )}
 
             <div className="ud-nav">
               {[
@@ -612,7 +633,9 @@ const UserDashboard = () => {
                     "USER").toUpperCase()} 👋
                 </div>
                 <div className="ud-welcome-sub">
-                  {applications.length === 0
+                  {internData?.intern_id
+                    ? `// intern id: ${internData.intern_id}`
+                    : applications.length === 0
                     ? "// no applications on record yet"
                     : `// ${applications.length} application${applications.length > 1 ? "s" : ""} on record`}
                 </div>
@@ -698,7 +721,6 @@ const UserDashboard = () => {
                         <div className="ud-detail">
                           <div className="ud-section-title">// application.details</div>
 
-                          {/* Timeline */}
                           <div className="ud-timeline">
                             {steps.map((step, i) => {
                               const isDone = activeApp.status !== "rejected" && i <= currentIdx;
