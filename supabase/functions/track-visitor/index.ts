@@ -1,11 +1,21 @@
-// track-visitor/index.ts  —  drop-in replacement
+// track-visitor/index.ts
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+
+// ── CORS headers ──────────────────────────────────────────────────
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
 
 function json(status: number, body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...corsHeaders,
+    },
   });
 }
 
@@ -31,22 +41,26 @@ function parseBrowser(ua: string): string {
   return "Other";
 }
 
-// ── Geo-location (unchanged from your working version) ───────────
+// ── Geo-location ─────────────────────────────────────────────────
 async function getGeoLocation(ip: string) {
-  if (!ip || ip === "unknown" || /^(192.168|10.|127.)/.test(ip)) {
+  if (!ip || ip === "unknown" || /^(192\.168|10\.|127\.)/.test(ip)) {
     console.log("Geo skipped: private/unknown IP:", ip);
     return { country: null, city: null };
   }
 
+  // Primary: ipwho.is (free, HTTPS, no key needed)
   try {
-    const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,city`);
+    const res = await fetch(`https://ipwho.is/${ip}`);
     const data = await res.json();
-    if (data.status === "success") return { country: data.country, city: data.city };
-  } catch (e) { console.log("ip-api failed:", e); }
+    console.log("ipwho.is response:", data);
+    if (data.success) return { country: data.country, city: data.city };
+  } catch (e) { console.log("ipwho.is failed:", e); }
 
+  // Fallback: ipapi.co
   try {
     const res = await fetch(`https://ipapi.co/${ip}/json/`);
     const data = await res.json();
+    console.log("ipapi.co response:", data);
     if (!data.error) return { country: data.country_name, city: data.city };
   } catch (e) { console.log("ipapi.co failed:", e); }
 
@@ -55,6 +69,11 @@ async function getGeoLocation(ip: string) {
 
 // ── Main handler ─────────────────────────────────────────────────
 Deno.serve(async (req) => {
+  // ── Handle CORS preflight ─────────────────────────────────────
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
   if (req.method !== "POST") return json(405, { error: "Method not allowed" });
 
   try {
@@ -74,7 +93,7 @@ Deno.serve(async (req) => {
       : req.headers.get("x-real-ip") || "unknown";
     const userAgent = req.headers.get("user-agent") || "unknown";
 
-    // ── Auth → userId + email (optional, won't break if absent) ──
+    // ── Auth → userId + email ─────────────────────────────────────
     let userId: string | null = null;
     let email: string | null = null;
 
@@ -113,11 +132,15 @@ Deno.serve(async (req) => {
       city,
     }]);
 
-    if (error) return json(500, { error: error.message });
+    if (error) {
+      console.log("Insert error:", error);
+      return json(500, { error: error.message });
+    }
 
     return json(200, { success: true, ip, device, browser, country, city });
 
   } catch (err) {
+    console.log("Unexpected error:", err);
     return json(500, { error: String(err) });
   }
 });

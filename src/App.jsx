@@ -52,7 +52,7 @@ const TermsAndConditions = lazy(() =>
   import("./Components/TermsAndConditions/TermsAndConditions")
 );
 
-// ── Scroll to top + visitor tracking ─────────────────────────────────────────
+// ── Scroll to top + visitor tracking ─────────────────────────────
 const ScrollToTop = () => {
   const { pathname } = useLocation();
 
@@ -61,47 +61,51 @@ const ScrollToTop = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  // Track once per browser session
+  // ── Core tracking function ────────────────────────────────────
+  const track = async () => {
+    try {
+      const visitorId = localStorage.getItem("vid") || crypto.randomUUID();
+      localStorage.setItem("vid", visitorId);
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      await fetch(
+        "https://etcalajnegfqeykeegie.supabase.co/functions/v1/track-visitor",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify({ visitor_id: visitorId }),
+        }
+      );
+    } catch (e) {
+      console.error("Tracking failed:", e);
+    }
+  };
+
+  // ── Track on first visit (once per session) ───────────────────
   useEffect(() => {
     if (sessionStorage.getItem("tracked")) return;
+    track().then(() => sessionStorage.setItem("tracked", "true"));
+  }, []);
 
-    const track = async () => {
-      try {
-        // Persist visitor_id across sessions on same device
-        const visitorId =
-          localStorage.getItem("vid") || crypto.randomUUID();
-        localStorage.setItem("vid", visitorId);
-
-        // Attach auth token if user is logged in
-        const { data: sessionData } = await supabase.auth.getSession();
-        const token = sessionData.session?.access_token;
-
-        await fetch(
-          "https://etcalajnegfqeykeegie.supabase.co/functions/v1/track-visitor",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token && { Authorization: `Bearer ${token}` }),
-            },
-            body: JSON.stringify({ visitor_id: visitorId }),
-          }
-        );
-
-        // Only mark as tracked after a successful call
-        sessionStorage.setItem("tracked", "true");
-      } catch (e) {
-        console.error("Tracking failed:", e);
+  // ── Re-track on login to capture user_id + email ─────────────
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN") {
+        track();
       }
-    };
-
-    track();
-  }, []); // runs once on mount
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   return null;
 };
 
-// ── Page transition wrapper ───────────────────────────────────────────────────
+// ── Page transition wrapper ───────────────────────────────────────
 const PageWrapper = ({ children }) => (
   <motion.div
     initial={{ opacity: 0, y: 40 }}
@@ -113,7 +117,7 @@ const PageWrapper = ({ children }) => (
   </motion.div>
 );
 
-// ── Loader ────────────────────────────────────────────────────────────────────
+// ── Loader ────────────────────────────────────────────────────────
 const PageLoader = () => {
   const texts = ["Initializing...", "Loading modules...", "Almost ready..."];
   const [index, setIndex] = useState(0);
@@ -196,7 +200,7 @@ const PageLoader = () => {
   );
 };
 
-// ── Animated routes ───────────────────────────────────────────────────────────
+// ── Animated routes ───────────────────────────────────────────────
 const AnimatedRoutes = () => {
   const location = useLocation();
   return (
@@ -204,34 +208,13 @@ const AnimatedRoutes = () => {
       <Routes location={location} key={location.pathname}>
 
         {/* ── Public ── */}
-        <Route
-          path="/"
-          element={<PageWrapper><Home /></PageWrapper>}
-        />
-        <Route
-          path="/About"
-          element={<PageWrapper><About /></PageWrapper>}
-        />
-        <Route
-          path="/Gallery"
-          element={<PageWrapper><Gallery /></PageWrapper>}
-        />
-        <Route
-          path="/ServicePage"
-          element={<PageWrapper><ServicePage /></PageWrapper>}
-        />
-        <Route
-          path="/Career"
-          element={<PageWrapper><Career /></PageWrapper>}
-        />
-        <Route
-          path="/Contact"
-          element={<PageWrapper><Contact /></PageWrapper>}
-        />
-        <Route
-          path="/Products"
-          element={<PageWrapper><Products /></PageWrapper>}
-        />
+        <Route path="/"            element={<PageWrapper><Home /></PageWrapper>} />
+        <Route path="/About"       element={<PageWrapper><About /></PageWrapper>} />
+        <Route path="/Gallery"     element={<PageWrapper><Gallery /></PageWrapper>} />
+        <Route path="/ServicePage" element={<PageWrapper><ServicePage /></PageWrapper>} />
+        <Route path="/Career"      element={<PageWrapper><Career /></PageWrapper>} />
+        <Route path="/Contact"     element={<PageWrapper><Contact /></PageWrapper>} />
+        <Route path="/Products"    element={<PageWrapper><Products /></PageWrapper>} />
 
         {/* Case-insensitive aliases */}
         <Route path="/about"       element={<Navigate to="/About"       replace />} />
@@ -242,44 +225,24 @@ const AnimatedRoutes = () => {
         <Route path="/products"    element={<Navigate to="/Products"    replace />} />
 
         {/* ── Auth ── */}
-        <Route
-          path="/Login"
-          element={<PageWrapper><Login /></PageWrapper>}
-        />
-        <Route path="/login" element={<Navigate to="/Login" replace />} />
-        <Route
-          path="/signup"
-          element={<PageWrapper><Signup /></PageWrapper>}
-        />
-        <Route
-          path="/email-confirmed"
-          element={<PageWrapper><EmailVerified /></PageWrapper>}
-        />
+        <Route path="/Login"           element={<PageWrapper><Login /></PageWrapper>} />
+        <Route path="/login"           element={<Navigate to="/Login" replace />} />
+        <Route path="/signup"          element={<PageWrapper><Signup /></PageWrapper>} />
+        <Route path="/email-confirmed" element={<PageWrapper><EmailVerified /></PageWrapper>} />
 
         {/* ── Internship ── */}
-        <Route
-          path="/internship-application"
-          element={<PageWrapper><InternshipApplication /></PageWrapper>}
-        />
+        <Route path="/internship-application" element={<PageWrapper><InternshipApplication /></PageWrapper>} />
 
         {/* ── User ── */}
-        <Route
-          path="/dashboard"
-          element={<PageWrapper><UserDashboard /></PageWrapper>}
-        />
-        <Route
-          path="/my-applications"
-          element={<PageWrapper><MyApplications /></PageWrapper>}
-        />
+        <Route path="/dashboard"       element={<PageWrapper><UserDashboard /></PageWrapper>} />
+        <Route path="/my-applications" element={<PageWrapper><MyApplications /></PageWrapper>} />
 
         {/* ── Admin ── */}
         <Route
           path="/admin-dashboard"
           element={
             <PageWrapper>
-              <AdminRoute>
-                <AdminDashboard />
-              </AdminRoute>
+              <AdminRoute><AdminDashboard /></AdminRoute>
             </PageWrapper>
           }
         />
@@ -287,22 +250,14 @@ const AnimatedRoutes = () => {
           path="/admin-analytics"
           element={
             <PageWrapper>
-              <AdminRoute>
-                <AnalyticsDashboard />
-              </AdminRoute>
+              <AdminRoute><AnalyticsDashboard /></AdminRoute>
             </PageWrapper>
           }
         />
 
         {/* ── Legal ── */}
-        <Route
-          path="/privacy-policy"
-          element={<PageWrapper><PrivacyPolicy /></PageWrapper>}
-        />
-        <Route
-          path="/terms-and-conditions"
-          element={<PageWrapper><TermsAndConditions /></PageWrapper>}
-        />
+        <Route path="/privacy-policy"       element={<PageWrapper><PrivacyPolicy /></PageWrapper>} />
+        <Route path="/terms-and-conditions" element={<PageWrapper><TermsAndConditions /></PageWrapper>} />
 
         {/* ── SkillArc (do not touch) ── */}
         <Route path="/skillarc" element={<SkillArc />} />
@@ -324,7 +279,7 @@ const AnimatedRoutes = () => {
   );
 };
 
-// ── Root App ──────────────────────────────────────────────────────────────────
+// ── Root App ──────────────────────────────────────────────────────
 const App = () => {
   return (
     <Router basename={import.meta.env.BASE_URL}>
