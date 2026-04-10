@@ -8,13 +8,9 @@ import {
 } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
-// ── Auth Context
 import { AuthProvider } from "./context/AuthContext";
-
-// ── Supabase client (adjust path if needed)
 import { supabase } from "./services/supabase";
 
-// Components (eager — always needed)
 import Navbar from "./Components/Navbar/Navbar";
 import Footer from "./Components/Footer/Footer";
 import AdminRoute from "./Components/Admin/AdminRoute";
@@ -22,7 +18,6 @@ import MouseFollower from "./Components/Effects/MouseFollower";
 import MouseParallax from "./Components/Effects/MouseParallax";
 import CustomCursor from "./Components/Effects/CustomCursor";
 
-// Lazy Pages
 const Home = lazy(() => import("./Components/Home/Home"));
 const About = lazy(() => import("./Components/About/About"));
 const ServicePage = lazy(() => import("./Components/ServicePage/ServicePage"));
@@ -31,74 +26,63 @@ const Career = lazy(() => import("./Components/Career/Career"));
 const Contact = lazy(() => import("./Components/Contact/Contact"));
 const Login = lazy(() => import("./Components/Login/Login"));
 const Signup = lazy(() => import("./Components/SignUp/SignUp"));
-const EmailVerified = lazy(() =>
-  import("./Components/EmailVerified/EmailVerified")
-);
+const EmailVerified = lazy(() => import("./Components/EmailVerified/EmailVerified"));
 const Products = lazy(() => import("./Components/Products/Products"));
-const InternshipApplication = lazy(
-  () => import("./Components/InternshipApplication/InternshipApplication")
-);
+const InternshipApplication = lazy(() => import("./Components/InternshipApplication/InternshipApplication"));
 const SkillArc = lazy(() => import("./Components/SkillArc/SkillArc"));
 const MyApplications = lazy(() => import("./Components/Users/MyApplications"));
 const UserDashboard = lazy(() => import("./Components/Users/UserDashboard"));
 const AdminDashboard = lazy(() => import("./Components/Admin/AdminDashboard"));
-const AnalyticsDashboard = lazy(() =>
-  import("./Components/Admin/AnalyticsDashboard")
-);
-const PrivacyPolicy = lazy(() =>
-  import("./Components/PrivacyPolicy/PrivacyPolicy")
-);
-const TermsAndConditions = lazy(() =>
-  import("./Components/TermsAndConditions/TermsAndConditions")
-);
+const AnalyticsDashboard = lazy(() => import("./Components/Admin/AnalyticsDashboard"));
+const PrivacyPolicy = lazy(() => import("./Components/PrivacyPolicy/PrivacyPolicy"));
+const TermsAndConditions = lazy(() => import("./Components/TermsAndConditions/TermsAndConditions"));
 
 // ── Scroll to top + visitor tracking ─────────────────────────────
 const ScrollToTop = () => {
   const { pathname } = useLocation();
 
-  // Reset scroll on every route change
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  // ── Core tracking function ────────────────────────────────────
-  const track = async () => {
-    try {
-      const visitorId = localStorage.getItem("vid") || crypto.randomUUID();
-      localStorage.setItem("vid", visitorId);
+  useEffect(() => {
+    const track = async () => {
+      try {
+        const visitorId = localStorage.getItem("vid") || crypto.randomUUID();
+        localStorage.setItem("vid", visitorId);
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token;
 
-      await fetch(
-        "https://etcalajnegfqeykeegie.supabase.co/functions/v1/track-visitor",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-          body: JSON.stringify({ visitor_id: visitorId }),
-        }
-      );
-    } catch (e) {
-      console.error("Tracking failed:", e);
+        await fetch(
+          "https://etcalajnegfqeykeegie.supabase.co/functions/v1/track-visitor",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+            body: JSON.stringify({ visitor_id: visitorId }),
+          }
+        );
+      } catch (e) {
+        console.error("Tracking failed:", e);
+      }
+    };
+
+    // ✅ First visit — track once per session
+    if (!sessionStorage.getItem("tracked")) {
+      track().then(() => sessionStorage.setItem("tracked", "true"));
     }
-  };
 
-  // ── Track on first visit (once per session) ───────────────────
-  useEffect(() => {
-    if (sessionStorage.getItem("tracked")) return;
-    track().then(() => sessionStorage.setItem("tracked", "true"));
-  }, []);
-
-  // ── Re-track on login to capture user_id + email ─────────────
-  useEffect(() => {
+    // ✅ On login — re-track once to capture user_id + email
     const { data: listener } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN") {
-        track();
+        sessionStorage.removeItem("tracked");
+        track().then(() => sessionStorage.setItem("tracked", "true"));
       }
     });
+
     return () => listener.subscription.unsubscribe();
   }, []);
 
@@ -167,7 +151,6 @@ const PageLoader = () => {
           gap: "12px",
         }}
       >
-        {/* Bouncing dots */}
         <div style={{ display: "flex", gap: "6px", marginBottom: "4px" }}>
           {[0, 1, 2].map((i) => (
             <div
@@ -180,8 +163,6 @@ const PageLoader = () => {
             />
           ))}
         </div>
-
-        {/* Cycling status text */}
         <div
           key={index}
           className="pl-text"
@@ -284,25 +265,17 @@ const App = () => {
   return (
     <Router basename={import.meta.env.BASE_URL}>
       <AuthProvider>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            minHeight: "100vh",
-          }}
-        >
+        <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
           <ScrollToTop />
           <MouseFollower />
           <MouseParallax />
           <CustomCursor />
           <Navbar />
-
           <main style={{ flex: 1 }}>
             <Suspense fallback={<PageLoader />}>
               <AnimatedRoutes />
             </Suspense>
           </main>
-
           <Footer />
         </div>
       </AuthProvider>
