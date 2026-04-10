@@ -2,7 +2,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-// ── CORS headers ──────────────────────────────────────────────────
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -12,10 +11,7 @@ const corsHeaders = {
 function json(status: number, body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: {
-      "Content-Type": "application/json",
-      ...corsHeaders,
-    },
+    headers: { "Content-Type": "application/json", ...corsHeaders },
   });
 }
 
@@ -25,7 +21,6 @@ function requireEnv(name: string): string {
   return v;
 }
 
-// ── Device + Browser parsers ─────────────────────────────────────
 function parseDevice(ua: string): string {
   if (/iPad|Tablet/i.test(ua)) return "Tablet";
   if (/Mobile|Android|iPhone/i.test(ua)) return "Mobile";
@@ -41,14 +36,12 @@ function parseBrowser(ua: string): string {
   return "Other";
 }
 
-// ── Geo-location ─────────────────────────────────────────────────
 async function getGeoLocation(ip: string) {
   if (!ip || ip === "unknown" || /^(192\.168|10\.|127\.)/.test(ip)) {
     console.log("Geo skipped: private/unknown IP:", ip);
     return { country: null, city: null };
   }
 
-  // Primary: ipwho.is (free, HTTPS, no key needed)
   try {
     const res = await fetch(`https://ipwho.is/${ip}`);
     const data = await res.json();
@@ -56,7 +49,6 @@ async function getGeoLocation(ip: string) {
     if (data.success) return { country: data.country, city: data.city };
   } catch (e) { console.log("ipwho.is failed:", e); }
 
-  // Fallback: ipapi.co
   try {
     const res = await fetch(`https://ipapi.co/${ip}/json/`);
     const data = await res.json();
@@ -67,9 +59,7 @@ async function getGeoLocation(ip: string) {
   return { country: null, city: null };
 }
 
-// ── Main handler ─────────────────────────────────────────────────
 Deno.serve(async (req) => {
-  // ── Handle CORS preflight ─────────────────────────────────────
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
@@ -82,18 +72,15 @@ Deno.serve(async (req) => {
       requireEnv("SUPABASE_SERVICE_ROLE_KEY")
     );
 
-    // ── Request body ──────────────────────────────────────────────
     const body = await req.json().catch(() => ({}));
     const visitorId: string | null = body.visitor_id ?? null;
 
-    // ── IP + User-Agent ───────────────────────────────────────────
     const forwarded = req.headers.get("x-forwarded-for");
     const ip = forwarded
       ? forwarded.split(",")[0].trim()
       : req.headers.get("x-real-ip") || "unknown";
     const userAgent = req.headers.get("user-agent") || "unknown";
 
-    // ── Auth → userId + email ─────────────────────────────────────
     let userId: string | null = null;
     let email: string | null = null;
 
@@ -109,22 +96,33 @@ Deno.serve(async (req) => {
       email  = data?.user?.email ?? null;
     }
 
-    // ── Device + Browser ──────────────────────────────────────────
     const device  = parseDevice(userAgent);
     const browser = parseBrowser(userAgent);
-
-    // ── Geo ───────────────────────────────────────────────────────
     const { country, city } = await getGeoLocation(ip);
 
-    console.log("Inserting:", { ip, userId, device, browser, country, city });
+    // ── Timestamps ────────────────────────────────────────────────
+    const now = new Date();
+    const visited_at = now.toISOString(); // UTC
+    const visited_at_ist = now.toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    }); // IST
 
-    // ── Insert ────────────────────────────────────────────────────
+    console.log("Inserting:", { ip, userId, device, browser, country, city, visited_at, visited_at_ist });
+
     const { error } = await supabase.from("visitors").insert([{
-      ip_address: ip,
-      user_agent: userAgent,
-      visited_at: new Date().toISOString(),
-      visitor_id: visitorId,
-      user_id:    userId,
+      ip_address:    ip,
+      user_agent:    userAgent,
+      visited_at,
+      visited_at_ist,
+      visitor_id:    visitorId,
+      user_id:       userId,
       email,
       device,
       browser,
@@ -137,7 +135,7 @@ Deno.serve(async (req) => {
       return json(500, { error: error.message });
     }
 
-    return json(200, { success: true, ip, device, browser, country, city });
+    return json(200, { success: true, ip, device, browser, country, city, visited_at, visited_at_ist });
 
   } catch (err) {
     console.log("Unexpected error:", err);
