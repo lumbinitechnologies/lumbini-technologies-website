@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../../services/supabase";
 import { jsPDF } from "jspdf";
 import signature from "../../assets/yeshraj_signature.png";
@@ -412,25 +413,9 @@ const uploadAndSaveDocument = async (pdfBlob, _fileName, internId, documentType)
   return fileUrl;
 };
 
-// ── Helper: parse user agent into readable device string ──────────────────────
-const parseDevice = (ua = "") => {
-  if (!ua) return "Unknown";
-  if (/mobile/i.test(ua))  return "📱 Mobile";
-  if (/tablet/i.test(ua))  return "📟 Tablet";
-  return "🖥️ Desktop";
-};
-
-const parseBrowser = (ua = "") => {
-  if (!ua) return "";
-  if (/edg/i.test(ua))     return "Edge";
-  if (/chrome/i.test(ua))  return "Chrome";
-  if (/firefox/i.test(ua)) return "Firefox";
-  if (/safari/i.test(ua))  return "Safari";
-  return "Browser";
-};
-
 // ── Component ─────────────────────────────────────────────────────────────────
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -442,12 +427,10 @@ const AdminDashboard = () => {
   const [toast, setToast] = useState(null);
   const [documents, setDocuments] = useState([]);
 
-  // ── Visitor stats ──────────────────────────────────────────────────────────
-  const [totalVisitors, setTotalVisitors]   = useState(0);
+  // ── Quick visitor stats (summary only — full analytics on separate page) ────
+  const [totalVisitors, setTotalVisitors] = useState(0);
   const [uniqueVisitors, setUniqueVisitors] = useState(0);
-  const [todayVisitors, setTodayVisitors]   = useState(0);
-  const [visitors, setVisitors]             = useState([]);
-  const [showVisitorLog, setShowVisitorLog] = useState(false);
+  const [todayVisitors, setTodayVisitors]  = useState(0);
 
   useEffect(() => {
     fetchApplications();
@@ -456,38 +439,22 @@ const AdminDashboard = () => {
 
   const fetchVisitorStats = async () => {
     try {
-      // Total
       const { count: total } = await supabase
         .from("visitors")
         .select("*", { count: "exact", head: true });
       setTotalVisitors(total || 0);
 
-      // Unique IPs
-      const { data: ipData } = await supabase
-        .from("visitors")
-        .select("ip_address");
-      if (ipData) {
-        const uniqueIPs = new Set(ipData.map((v) => v.ip_address));
-        setUniqueVisitors(uniqueIPs.size);
-      }
+      const { data: ipData } = await supabase.from("visitors").select("ip_address");
+      if (ipData) setUniqueVisitors(new Set(ipData.map((v) => v.ip_address)).size);
 
-      // Today
       const today = new Date().toISOString().split("T")[0];
       const { count: todayCount } = await supabase
         .from("visitors")
         .select("*", { count: "exact", head: true })
         .gte("visited_at", today);
       setTodayVisitors(todayCount || 0);
-
-      // Full log (latest 50)
-      const { data: logData } = await supabase
-        .from("visitors")
-        .select("*")
-        .order("visited_at", { ascending: false })
-        .limit(50);
-      setVisitors(logData || []);
     } catch (e) {
-      console.warn("[AdminDashboard] Could not fetch visitor stats:", e.message);
+      console.warn("Visitor stats error:", e.message);
     }
   };
 
@@ -499,9 +466,7 @@ const AdminDashboard = () => {
         if (!internId) { setDocuments([]); return; }
         const { data } = await supabase.from("documents").select("*").eq("intern_id", internId);
         setDocuments(data || []);
-      } catch {
-        setDocuments([]);
-      }
+      } catch { setDocuments([]); }
     };
     fetchDocs();
   }, [selected]);
@@ -531,7 +496,7 @@ const AdminDashboard = () => {
       const app = applications.find((a) => a.id === id);
       if (app) {
         try { await getOrCreateIntern({ ...app, status: "selected" }); }
-        catch (e) { console.warn("[AdminDashboard] Could not create intern:", e.message); }
+        catch (e) { console.warn("Could not create intern:", e.message); }
       }
     }
     await fetchApplications();
@@ -562,16 +527,13 @@ const AdminDashboard = () => {
         const pdfBlob = doc.output("blob");
         const docTypeMap = { offer: "offer_letter", certificate: "certificate" };
         const fileUrl = await uploadAndSaveDocument(pdfBlob, downloadName, internId, docTypeMap[type]);
-        console.log("[AdminDashboard] Document saved:", fileUrl);
         const { data: freshDocs } = await supabase.from("documents").select("*").eq("intern_id", internId);
         setDocuments(freshDocs || []);
         showToast(`${labelMap[type].replace("_", " ")} downloaded & saved ✓`);
       } catch (uploadErr) {
-        console.warn("[AdminDashboard] Upload failed:", uploadErr.message);
         showToast(`${labelMap[type].replace("_", " ")} downloaded ✓`);
       }
     } catch (e) {
-      console.error("[AdminDashboard] PDF generation failed:", e);
       showToast("Failed to generate document.");
     } finally {
       setSending(null);
@@ -597,15 +559,6 @@ const AdminDashboard = () => {
   const fmt = (d) =>
     d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
 
-  const fmtTime = (d) =>
-    d ? new Date(d).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
-
-  // Detect repeated IPs (visited more than once)
-  const ipCounts = {};
-  visitors.forEach((v) => {
-    ipCounts[v.ip_address] = (ipCounts[v.ip_address] || 0) + 1;
-  });
-
   return (
     <>
       <style>{`
@@ -629,6 +582,24 @@ const AdminDashboard = () => {
         .adm-logo-dot { width: 10px; height: 10px; border-radius: 50%; background: #facc15; box-shadow: 0 0 10px rgba(250,204,21,0.6); animation: pulse 2s infinite; }
         @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(.85)} }
 
+        .adm-topbar-right { display: flex; gap: 10px; align-items: center; }
+
+        .adm-analytics-btn {
+          display: inline-flex; align-items: center; gap: 8px;
+          background: rgba(250,204,21,0.08); border: 1px solid rgba(250,204,21,0.25);
+          color: #facc15; font-size: 12px; font-family: 'JetBrains Mono', monospace;
+          font-weight: 700; padding: 8px 16px; border-radius: 8px; cursor: pointer;
+          transition: all 0.2s; letter-spacing: 0.05em; text-transform: uppercase;
+        }
+        .adm-analytics-btn:hover {
+          background: rgba(250,204,21,0.15); border-color: #facc15;
+          box-shadow: 0 0 20px rgba(250,204,21,0.15);
+        }
+        .adm-analytics-btn-dot {
+          width: 7px; height: 7px; border-radius: 50%; background: #facc15;
+          animation: pulse 1.5s infinite;
+        }
+
         .adm-refresh-btn {
           background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); color: #64748b;
           font-size: 13px; font-family: 'JetBrains Mono', monospace;
@@ -645,7 +616,7 @@ const AdminDashboard = () => {
         }
 
         /* ── Visitor strip ── */
-        .adm-visitor-strip { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 16px; }
+        .adm-visitor-strip { display: grid; grid-template-columns: repeat(3,1fr) auto; gap: 12px; margin-bottom: 28px; align-items: stretch; }
         .adm-visitor-card {
           background: rgba(250,204,21,0.04); border: 1px solid rgba(250,204,21,0.12);
           border-radius: 10px; padding: 14px 20px; display: flex; align-items: center; gap: 14px;
@@ -654,32 +625,28 @@ const AdminDashboard = () => {
         .adm-visitor-label { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: rgba(250,204,21,0.45); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 3px; }
         .adm-visitor-num { font-size: 1.5rem; font-weight: 800; color: #facc15; line-height: 1; }
 
-        /* ── Visitor log toggle ── */
-        .adm-log-toggle {
-          display: inline-flex; align-items: center; gap: 7px;
+        .adm-analytics-card {
+          background: linear-gradient(135deg, rgba(250,204,21,0.08), rgba(250,204,21,0.03));
+          border: 1px solid rgba(250,204,21,0.2); border-radius: 10px;
+          padding: 14px 20px; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; gap: 8px;
+          cursor: pointer; transition: all 0.25s; min-width: 140px;
+        }
+        .adm-analytics-card:hover {
+          background: linear-gradient(135deg, rgba(250,204,21,0.15), rgba(250,204,21,0.06));
+          border-color: #facc15; box-shadow: 0 0 30px rgba(250,204,21,0.12);
+          transform: translateY(-1px);
+        }
+        .adm-analytics-card-icon { font-size: 1.6rem; }
+        .adm-analytics-card-label {
           font-size: 11px; font-family: 'JetBrains Mono', monospace;
-          color: rgba(250,204,21,0.5); cursor: pointer; margin-bottom: 20px;
-          background: none; border: 1px solid rgba(250,204,21,0.15);
-          padding: 6px 14px; border-radius: 6px; transition: all 0.2s;
+          color: #facc15; font-weight: 700; letter-spacing: 0.06em;
+          text-transform: uppercase; text-align: center;
         }
-        .adm-log-toggle:hover { color: #facc15; border-color: rgba(250,204,21,0.4); }
-
-        /* ── Visitor log table ── */
-        .adm-log-wrap {
-          background: rgba(255,255,255,0.015); border: 1px solid rgba(250,204,21,0.08);
-          border-radius: 12px; overflow: hidden; margin-bottom: 28px;
+        .adm-analytics-card-sub {
+          font-size: 10px; font-family: 'JetBrains Mono', monospace;
+          color: rgba(250,204,21,0.35); text-align: center;
         }
-        .adm-log-table { width: 100%; border-collapse: collapse; }
-        .adm-log-table thead tr { background: rgba(250,204,21,0.04); border-bottom: 1px solid rgba(250,204,21,0.08); }
-        .adm-log-table th { padding: 10px 14px; text-align: left; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: rgba(250,204,21,0.35); text-transform: uppercase; letter-spacing: .1em; }
-        .adm-log-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.15s; }
-        .adm-log-table tbody tr:last-child { border-bottom: none; }
-        .adm-log-table tbody tr:hover { background: rgba(250,204,21,0.02); }
-        .adm-log-table td { padding: 10px 14px; font-size: 12px; font-family: 'JetBrains Mono', monospace; color: #475569; vertical-align: middle; }
-        .adm-log-ip { color: #94a3b8; font-weight: 600; }
-        .adm-log-repeat { color: #f87171; font-size: 10px; margin-left: 6px; }
-        .adm-log-device { color: #64748b; }
-        .adm-log-time { color: rgba(255,255,255,0.2); font-size: 11px; }
 
         /* ── Application stats ── */
         .adm-stats { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 28px; }
@@ -774,7 +741,6 @@ const AdminDashboard = () => {
           .adm-visitor-strip { grid-template-columns: 1fr; }
           .adm-drawer { width:100%; }
           .adm-table th:nth-child(3), .adm-table td:nth-child(3) { display:none; }
-          .adm-log-table th:nth-child(2), .adm-log-table td:nth-child(2) { display:none; }
         }
       `}</style>
 
@@ -784,18 +750,21 @@ const AdminDashboard = () => {
             <div className="adm-logo-dot" />
             Lumbini Admin
           </div>
-          <button
-            className="adm-refresh-btn"
-            onClick={() => { fetchApplications(); fetchVisitorStats(); }}
-          >
-            ↻ Refresh
-          </button>
+          <div className="adm-topbar-right">
+            <button className="adm-analytics-btn" onClick={() => navigate("/admin-analytics")}>
+              <span className="adm-analytics-btn-dot" />
+              Analytics
+            </button>
+            <button className="adm-refresh-btn" onClick={() => { fetchApplications(); fetchVisitorStats(); }}>
+              ↻ Refresh
+            </button>
+          </div>
         </div>
 
         <div className="adm-body">
 
-          {/* ── Site Analytics ── */}
-          <div className="adm-section-label">Site Analytics</div>
+          {/* ── Quick Visitor Summary ── */}
+          <div className="adm-section-label">Site Overview</div>
           <div className="adm-visitor-strip">
             <div className="adm-visitor-card">
               <div className="adm-visitor-icon">👁️</div>
@@ -818,63 +787,13 @@ const AdminDashboard = () => {
                 <div className="adm-visitor-num">{todayVisitors}</div>
               </div>
             </div>
-          </div>
-
-          {/* ── Visitor Log toggle ── */}
-          <button
-            className="adm-log-toggle"
-            onClick={() => setShowVisitorLog((v) => !v)}
-          >
-            {showVisitorLog ? "▲ Hide" : "▼ Show"} Visitor Log ({visitors.length})
-          </button>
-
-          {/* ── Visitor Log table ── */}
-          {showVisitorLog && (
-            <div className="adm-log-wrap">
-              <table className="adm-log-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>IP Address</th>
-                    <th>Location</th>
-                    <th>Device</th>
-                    <th>Browser</th>
-                    <th>Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visitors.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} style={{ textAlign: "center", padding: "30px", color: "rgba(255,255,255,0.1)" }}>
-                        // no visitor logs yet
-                      </td>
-                    </tr>
-                  ) : visitors.map((v, i) => {
-                    const isRepeat = ipCounts[v.ip_address] > 1;
-                    return (
-                      <tr key={v.id || i}>
-                        <td style={{ color: "rgba(255,255,255,0.1)", fontSize: 11 }}>{i + 1}</td>
-                        <td>
-                          <span className="adm-log-ip">
-                            {v.ip_address || "—"}
-                          </span>
-                          {isRepeat && (
-                            <span className="adm-log-repeat">
-                              ×{ipCounts[v.ip_address]}
-                            </span>
-                          )}
-                        </td>
-                        <td className="adm-log-device">🌍 {v.city || "—"}, {v.country || "—"}</td>
-                        <td className="adm-log-device">{parseDevice(v.user_agent)}</td>
-                        <td className="adm-log-device">{parseBrowser(v.user_agent)}</td>
-                        <td className="adm-log-time">{fmtTime(v.visited_at)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            {/* ── Deep analytics CTA ── */}
+            <div className="adm-analytics-card" onClick={() => navigate("/admin-analytics")}>
+              <div className="adm-analytics-card-icon">📊</div>
+              <div className="adm-analytics-card-label">Deep Analytics</div>
+              <div className="adm-analytics-card-sub">Devices · Geo · Timeline</div>
             </div>
-          )}
+          </div>
 
           {/* ── Applications ── */}
           <div className="adm-section-label">Applications</div>
@@ -956,21 +875,9 @@ const AdminDashboard = () => {
                         </td>
                         <td onClick={(e) => e.stopPropagation()}>
                           <div className="adm-actions">
-                            <button
-                              className="adm-action-btn btn-shortlist"
-                              disabled={app.status === "shortlisted" || updating === app.id + "shortlisted"}
-                              onClick={() => updateStatus(app.id, "shortlisted")}
-                            >Shortlist</button>
-                            <button
-                              className="adm-action-btn btn-select"
-                              disabled={app.status === "selected" || updating === app.id + "selected"}
-                              onClick={() => updateStatus(app.id, "selected")}
-                            >Select</button>
-                            <button
-                              className="adm-action-btn btn-reject"
-                              disabled={app.status === "rejected" || updating === app.id + "rejected"}
-                              onClick={() => updateStatus(app.id, "rejected")}
-                            >Reject</button>
+                            <button className="adm-action-btn btn-shortlist" disabled={app.status === "shortlisted" || updating === app.id + "shortlisted"} onClick={() => updateStatus(app.id, "shortlisted")}>Shortlist</button>
+                            <button className="adm-action-btn btn-select"    disabled={app.status === "selected"    || updating === app.id + "selected"}    onClick={() => updateStatus(app.id, "selected")}>Select</button>
+                            <button className="adm-action-btn btn-reject"    disabled={app.status === "rejected"    || updating === app.id + "rejected"}    onClick={() => updateStatus(app.id, "rejected")}>Reject</button>
                           </div>
                         </td>
                       </tr>
@@ -996,10 +903,7 @@ const AdminDashboard = () => {
               <div className="adm-drawer-name">{selected.name || "—"}</div>
               <div className="adm-drawer-email">{selected.email}</div>
 
-              <span
-                className="adm-status-badge"
-                style={{ "--sbg": s.bg, "--sc": s.color, marginBottom: "20px", display: "inline-flex" }}
-              >
+              <span className="adm-status-badge" style={{ "--sbg": s.bg, "--sc": s.color, marginBottom: "20px", display: "inline-flex" }}>
                 <span className="adm-status-dot" />
                 {s.label}
               </span>
@@ -1046,16 +950,10 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              {/* ── FIX 1: Resume link ── */}
               {selected.resume_url && (
                 <div className="adm-drawer-section">
                   <div className="adm-drawer-section-title">Resume</div>
-                  <a
-                    href={selected.resume_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="adm-drawer-resume-btn"
-                  >
+                  <a href={selected.resume_url} target="_blank" rel="noopener noreferrer" className="adm-drawer-resume-btn">
                     ↗ View Resume (PDF)
                   </a>
                 </div>
@@ -1069,85 +967,31 @@ const AdminDashboard = () => {
 
               <div className="adm-docs-divider">Documents</div>
               {!isSelected ? (
-                <div className="adm-docs-gate">
-                  // Select applicant to unlock document generation
-                </div>
+                <div className="adm-docs-gate">// Select applicant to unlock document generation</div>
               ) : (() => {
                 const offerDoc = documents.find((d) => d.document_type === "offer_letter");
                 const certDoc  = documents.find((d) => d.document_type === "certificate");
                 return (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <button
-                        className="adm-action-btn btn-offer"
-                        style={{ flex: 1 }}
-                        disabled={!!sending}
-                        onClick={() => handleGenerateDocument("offer")}
-                      >
-                        {sending === `${selected.id}:offer`
-                          ? "Generating..."
-                          : offerDoc ? "↺ Regenerate Offer Letter" : "Generate Offer Letter"}
+                      <button className="adm-action-btn btn-offer" style={{ flex: 1 }} disabled={!!sending} onClick={() => handleGenerateDocument("offer")}>
+                        {sending === `${selected.id}:offer` ? "Generating..." : offerDoc ? "↺ Regenerate Offer Letter" : "Generate Offer Letter"}
                       </button>
-                      {/* ── FIX 2: Offer Letter view link ── */}
                       {offerDoc && (
-                        <a
-                          href={offerDoc.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="adm-action-btn"
-                          style={{
-                            background: "rgba(96,165,250,0.07)",
-                            border: "1px solid rgba(96,165,250,0.2)",
-                            color: "#60a5fa",
-                            textDecoration: "none",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          ↗ View
-                        </a>
+                        <a href={offerDoc.file_url} target="_blank" rel="noopener noreferrer" className="adm-action-btn" style={{ background: "rgba(96,165,250,0.07)", border: "1px solid rgba(96,165,250,0.2)", color: "#60a5fa", textDecoration: "none", whiteSpace: "nowrap" }}>↗ View</a>
                       )}
                     </div>
-                    {offerDoc && (
-                      <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "#39ff14", paddingLeft: 2 }}>
-                        ✓ Offer Letter generated
-                      </div>
-                    )}
+                    {offerDoc && <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "#39ff14", paddingLeft: 2 }}>✓ Offer Letter generated</div>}
 
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <button
-                        className="adm-action-btn btn-certificate"
-                        style={{ flex: 1 }}
-                        disabled={!!sending}
-                        onClick={() => handleGenerateDocument("certificate")}
-                      >
-                        {sending === `${selected.id}:certificate`
-                          ? "Generating..."
-                          : certDoc ? "↺ Regenerate Certificate" : "Generate Certificate"}
+                      <button className="adm-action-btn btn-certificate" style={{ flex: 1 }} disabled={!!sending} onClick={() => handleGenerateDocument("certificate")}>
+                        {sending === `${selected.id}:certificate` ? "Generating..." : certDoc ? "↺ Regenerate Certificate" : "Generate Certificate"}
                       </button>
-                      {/* ── FIX 3: Certificate view link ── */}
                       {certDoc && (
-                        <a
-                          href={certDoc.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="adm-action-btn"
-                          style={{
-                            background: "rgba(96,165,250,0.07)",
-                            border: "1px solid rgba(96,165,250,0.2)",
-                            color: "#60a5fa",
-                            textDecoration: "none",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          ↗ View
-                        </a>
+                        <a href={certDoc.file_url} target="_blank" rel="noopener noreferrer" className="adm-action-btn" style={{ background: "rgba(96,165,250,0.07)", border: "1px solid rgba(96,165,250,0.2)", color: "#60a5fa", textDecoration: "none", whiteSpace: "nowrap" }}>↗ View</a>
                       )}
                     </div>
-                    {certDoc && (
-                      <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "#39ff14", paddingLeft: 2 }}>
-                        ✓ Certificate generated
-                      </div>
-                    )}
+                    {certDoc && <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: "#39ff14", paddingLeft: 2 }}>✓ Certificate generated</div>}
                   </div>
                 );
               })()}

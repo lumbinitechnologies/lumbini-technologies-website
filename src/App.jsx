@@ -11,6 +11,9 @@ import { AnimatePresence, motion } from "framer-motion";
 // ── Auth Context
 import { AuthProvider } from "./context/AuthContext";
 
+// ── Supabase client (adjust path if needed)
+import { supabase } from "./services/supabase";
+
 // Components (eager — always needed)
 import Navbar from "./Components/Navbar/Navbar";
 import Footer from "./Components/Footer/Footer";
@@ -33,30 +36,67 @@ const EmailVerified = lazy(() =>
 );
 const Products = lazy(() => import("./Components/Products/Products"));
 const InternshipApplication = lazy(
-  () => import("./Components/InternshipApplication/InternshipApplication"),
+  () => import("./Components/InternshipApplication/InternshipApplication")
 );
 const SkillArc = lazy(() => import("./Components/SkillArc/SkillArc"));
 const MyApplications = lazy(() => import("./Components/Users/MyApplications"));
 const UserDashboard = lazy(() => import("./Components/Users/UserDashboard"));
 const AdminDashboard = lazy(() => import("./Components/Admin/AdminDashboard"));
-const PrivacyPolicy = lazy(() => import("./Components/PrivacyPolicy/PrivacyPolicy"));
-const TermsAndConditions = lazy(() => import("./Components/TermsAndConditions/TermsAndConditions"));
+const AnalyticsDashboard = lazy(() =>
+  import("./Components/Admin/AnalyticsDashboard")
+);
+const PrivacyPolicy = lazy(() =>
+  import("./Components/PrivacyPolicy/PrivacyPolicy")
+);
+const TermsAndConditions = lazy(() =>
+  import("./Components/TermsAndConditions/TermsAndConditions")
+);
 
-// ── Scroll to top on route change ─────────────────────────────────────────────
+// ── Scroll to top + visitor tracking ─────────────────────────────────────────
 const ScrollToTop = () => {
   const { pathname } = useLocation();
 
+  // Reset scroll on every route change
   useEffect(() => {
     window.scrollTo(0, 0);
-
-    if (!sessionStorage.getItem("tracked")) {
-      fetch("https://etcalajnegfqeykeegie.supabase.co/functions/v1/track-visitor", {
-        method: "POST",
-      });
-      sessionStorage.setItem("tracked", "true");
-    }
-
   }, [pathname]);
+
+  // Track once per browser session
+  useEffect(() => {
+    if (sessionStorage.getItem("tracked")) return;
+
+    const track = async () => {
+      try {
+        // Persist visitor_id across sessions on same device
+        const visitorId =
+          localStorage.getItem("vid") || crypto.randomUUID();
+        localStorage.setItem("vid", visitorId);
+
+        // Attach auth token if user is logged in
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token;
+
+        await fetch(
+          "https://etcalajnegfqeykeegie.supabase.co/functions/v1/track-visitor",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+            body: JSON.stringify({ visitor_id: visitorId }),
+          }
+        );
+
+        // Only mark as tracked after a successful call
+        sessionStorage.setItem("tracked", "true");
+      } catch (e) {
+        console.error("Tracking failed:", e);
+      }
+    };
+
+    track();
+  }, []); // runs once on mount
 
   return null;
 };
@@ -73,7 +113,7 @@ const PageWrapper = ({ children }) => (
   </motion.div>
 );
 
-// ── Loader — matches UserDashboard style ──────────────────────────────────────
+// ── Loader ────────────────────────────────────────────────────────────────────
 const PageLoader = () => {
   const texts = ["Initializing...", "Loading modules...", "Almost ready..."];
   const [index, setIndex] = useState(0);
@@ -166,59 +206,31 @@ const AnimatedRoutes = () => {
         {/* ── Public ── */}
         <Route
           path="/"
-          element={
-            <PageWrapper>
-              <Home />
-            </PageWrapper>
-          }
+          element={<PageWrapper><Home /></PageWrapper>}
         />
         <Route
           path="/About"
-          element={
-            <PageWrapper>
-              <About />
-            </PageWrapper>
-          }
+          element={<PageWrapper><About /></PageWrapper>}
         />
         <Route
           path="/Gallery"
-          element={
-            <PageWrapper>
-              <Gallery />
-            </PageWrapper>
-          }
+          element={<PageWrapper><Gallery /></PageWrapper>}
         />
         <Route
           path="/ServicePage"
-          element={
-            <PageWrapper>
-              <ServicePage />
-            </PageWrapper>
-          }
+          element={<PageWrapper><ServicePage /></PageWrapper>}
         />
         <Route
           path="/Career"
-          element={
-            <PageWrapper>
-              <Career />
-            </PageWrapper>
-          }
+          element={<PageWrapper><Career /></PageWrapper>}
         />
         <Route
           path="/Contact"
-          element={
-            <PageWrapper>
-              <Contact />
-            </PageWrapper>
-          }
+          element={<PageWrapper><Contact /></PageWrapper>}
         />
         <Route
           path="/Products"
-          element={
-            <PageWrapper>
-              <Products />
-            </PageWrapper>
-          }
+          element={<PageWrapper><Products /></PageWrapper>}
         />
 
         {/* Case-insensitive aliases */}
@@ -232,56 +244,32 @@ const AnimatedRoutes = () => {
         {/* ── Auth ── */}
         <Route
           path="/Login"
-          element={
-            <PageWrapper>
-              <Login />
-            </PageWrapper>
-          }
+          element={<PageWrapper><Login /></PageWrapper>}
         />
         <Route path="/login" element={<Navigate to="/Login" replace />} />
         <Route
           path="/signup"
-          element={
-            <PageWrapper>
-              <Signup />
-            </PageWrapper>
-          }
+          element={<PageWrapper><Signup /></PageWrapper>}
         />
         <Route
           path="/email-confirmed"
-          element={
-            <PageWrapper>
-              <EmailVerified />
-            </PageWrapper>
-          }
+          element={<PageWrapper><EmailVerified /></PageWrapper>}
         />
 
         {/* ── Internship ── */}
         <Route
           path="/internship-application"
-          element={
-            <PageWrapper>
-              <InternshipApplication />
-            </PageWrapper>
-          }
+          element={<PageWrapper><InternshipApplication /></PageWrapper>}
         />
 
         {/* ── User ── */}
         <Route
           path="/dashboard"
-          element={
-            <PageWrapper>
-              <UserDashboard />
-            </PageWrapper>
-          }
+          element={<PageWrapper><UserDashboard /></PageWrapper>}
         />
         <Route
           path="/my-applications"
-          element={
-            <PageWrapper>
-              <MyApplications />
-            </PageWrapper>
-          }
+          element={<PageWrapper><MyApplications /></PageWrapper>}
         />
 
         {/* ── Admin ── */}
@@ -295,23 +283,25 @@ const AnimatedRoutes = () => {
             </PageWrapper>
           }
         />
+        <Route
+          path="/admin-analytics"
+          element={
+            <PageWrapper>
+              <AdminRoute>
+                <AnalyticsDashboard />
+              </AdminRoute>
+            </PageWrapper>
+          }
+        />
 
         {/* ── Legal ── */}
         <Route
           path="/privacy-policy"
-          element={
-            <PageWrapper>
-              <PrivacyPolicy />
-            </PageWrapper>
-          }
+          element={<PageWrapper><PrivacyPolicy /></PageWrapper>}
         />
         <Route
           path="/terms-and-conditions"
-          element={
-            <PageWrapper>
-              <TermsAndConditions />
-            </PageWrapper>
-          }
+          element={<PageWrapper><TermsAndConditions /></PageWrapper>}
         />
 
         {/* ── SkillArc (do not touch) ── */}
@@ -322,9 +312,7 @@ const AnimatedRoutes = () => {
           path="*"
           element={
             <PageWrapper>
-              <div
-                style={{ color: "white", textAlign: "center", padding: "3rem" }}
-              >
+              <div style={{ color: "white", textAlign: "center", padding: "3rem" }}>
                 Page Not Found
               </div>
             </PageWrapper>
