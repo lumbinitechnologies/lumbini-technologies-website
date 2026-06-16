@@ -101,7 +101,7 @@ const Navbar = () => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 14px 40px;
+          padding: 18px 40px;
           background: transparent;
           transition: background 0.35s, box-shadow 0.35s;
           z-index: 1060;
@@ -125,7 +125,10 @@ const Navbar = () => {
           min-width: 0;
           overflow: hidden;
           text-overflow: ellipsis;
-          line-height: 1;
+          display: flex;
+          align-items: center;
+          line-height: 1.25;
+          padding-bottom: 2px;
         }
         .lt-logo span { color: #fff; }
 
@@ -619,8 +622,8 @@ const Navbar = () => {
           </div>
 
           <Link to="/ServicePage">Services</Link>
-          <Link to="/Career">Careers</Link>
           <Link to="/Products">Products</Link>
+          <Link to="/Career">Careers</Link>
           <Link to="/Contact">Contact</Link>
 
           {!user ? (

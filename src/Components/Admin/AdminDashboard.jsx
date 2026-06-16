@@ -682,7 +682,7 @@ const AdminDashboard = () => {
 
         .adm {
           min-height: 100vh;
-          background: #040404;
+          background: transparent;
           color: #e2e8f0;
           font-family: 'Syne', sans-serif;
           padding-top: 70px;
@@ -692,7 +692,10 @@ const AdminDashboard = () => {
         .adm-topbar {
           display: flex; align-items: center; justify-content: space-between;
           padding: 18px 36px; border-bottom: 1px solid rgba(250,204,21,0.08);
-          background: #040404; position: sticky; top: 70px; z-index: 50;
+          background: rgba(4, 4, 4, 0.85);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          position: sticky; top: 70px; z-index: 50;
         }
         .adm-logo {
           display: flex; align-items: center; gap: 10px;
@@ -982,9 +985,21 @@ const AdminDashboard = () => {
           </div>
           <div className="adm-topbar-right">
             <button className="adm-analytics-btn" onClick={() => navigate("/admin-analytics")}>
-              <span className="adm-analytics-btn-dot" />
-              Analytics
-            </button>
+  <span className="adm-analytics-btn-dot" />
+  Analytics
+</button>
+<button
+  className="adm-analytics-btn"
+  onClick={() => navigate("/admin/blogs")}
+  style={{
+    background: "rgba(57,255,20,.07)",
+    borderColor: "rgba(57,255,20,.25)",
+    color: "#39ff14",
+  }}
+>
+  <span style={{fontSize:"1rem"}}>📝</span>
+  Blogs
+</button>
             <button
               className="adm-refresh-btn"
               onClick={() => { fetchApplications(); fetchVisitorStats(); }}

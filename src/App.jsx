@@ -17,6 +17,7 @@ import AdminRoute from "./Components/Admin/AdminRoute";
 import MouseFollower from "./Components/Effects/MouseFollower";
 import MouseParallax from "./Components/Effects/MouseParallax";
 import CustomCursor from "./Components/Effects/CustomCursor";
+import AnimatedBackground from "./Components/Effects/AnimatedBackground";
 
 const Home = lazy(() => import("./Components/Home/Home"));
 const About = lazy(() => import("./Components/About/About"));
@@ -36,6 +37,14 @@ const AdminDashboard = lazy(() => import("./Components/Admin/AdminDashboard"));
 const AnalyticsDashboard = lazy(() => import("./Components/Admin/AnalyticsDashboard"));
 const PrivacyPolicy = lazy(() => import("./Components/PrivacyPolicy/PrivacyPolicy"));
 const TermsAndConditions = lazy(() => import("./Components/TermsAndConditions/TermsAndConditions"));
+
+const Blogs = lazy(() => import("./Components/Blogs/Blogs"));
+const BlogDetails = lazy(() => import("./Components/Blogs/BlogDetails"));
+
+const WriteBlog = lazy(() => import("./Components/Users/WriteBlog"));
+const MyBlogs = lazy(() => import("./Components/Users/MyBlogs"));
+
+const BlogManagement = lazy(() => import("./Components/Admin/BlogManagement"));
 
 // ── Scroll to top + visitor tracking ─────────────────────────────
 const ScrollToTop = () => {
@@ -189,34 +198,42 @@ const AnimatedRoutes = () => {
       <Routes location={location} key={location.pathname}>
 
         {/* ── Public ── */}
-        <Route path="/"            element={<PageWrapper><Home /></PageWrapper>} />
-        <Route path="/About"       element={<PageWrapper><About /></PageWrapper>} />
-        <Route path="/Gallery"     element={<PageWrapper><Gallery /></PageWrapper>} />
+        <Route path="/" element={<PageWrapper><Home /></PageWrapper>} />
+        <Route path="/About" element={<PageWrapper><About /></PageWrapper>} />
+        <Route path="/Gallery" element={<PageWrapper><Gallery /></PageWrapper>} />
         <Route path="/ServicePage" element={<PageWrapper><ServicePage /></PageWrapper>} />
-        <Route path="/Career"      element={<PageWrapper><Career /></PageWrapper>} />
-        <Route path="/Contact"     element={<PageWrapper><Contact /></PageWrapper>} />
-        <Route path="/Products"    element={<PageWrapper><Products /></PageWrapper>} />
+        <Route path="/Career" element={<PageWrapper><Career /></PageWrapper>} />
+        <Route path="/Contact" element={<PageWrapper><Contact /></PageWrapper>} />
+        <Route path="/Products" element={<PageWrapper><Products /></PageWrapper>} />
+        <Route path="/Blogs" element={<PageWrapper><Blogs /></PageWrapper>} />
+        <Route
+          path="/blogs/:slug"
+          element={<PageWrapper><BlogDetails /></PageWrapper>}
+        />
 
         {/* Case-insensitive aliases */}
-        <Route path="/about"       element={<Navigate to="/About"       replace />} />
-        <Route path="/gallery"     element={<Navigate to="/Gallery"     replace />} />
+        <Route path="/about" element={<Navigate to="/About" replace />} />
+        <Route path="/gallery" element={<Navigate to="/Gallery" replace />} />
         <Route path="/servicepage" element={<Navigate to="/ServicePage" replace />} />
-        <Route path="/career"      element={<Navigate to="/Career"      replace />} />
-        <Route path="/contact"     element={<Navigate to="/Contact"     replace />} />
-        <Route path="/products"    element={<Navigate to="/Products"    replace />} />
+        <Route path="/career" element={<Navigate to="/Career" replace />} />
+        <Route path="/contact" element={<Navigate to="/Contact" replace />} />
+        <Route path="/products" element={<Navigate to="/Products" replace />} />
+        <Route path="/blogs" element={<Navigate to="/Blogs" replace />} />
 
         {/* ── Auth ── */}
-        <Route path="/Login"           element={<PageWrapper><Login /></PageWrapper>} />
-        <Route path="/login"           element={<Navigate to="/Login" replace />} />
-        <Route path="/signup"          element={<PageWrapper><Signup /></PageWrapper>} />
+        <Route path="/Login" element={<PageWrapper><Login /></PageWrapper>} />
+        <Route path="/login" element={<Navigate to="/Login" replace />} />
+        <Route path="/signup" element={<PageWrapper><Signup /></PageWrapper>} />
         <Route path="/email-confirmed" element={<PageWrapper><EmailVerified /></PageWrapper>} />
 
         {/* ── Internship ── */}
         <Route path="/internship-application" element={<PageWrapper><InternshipApplication /></PageWrapper>} />
 
         {/* ── User ── */}
-        <Route path="/dashboard"       element={<PageWrapper><UserDashboard /></PageWrapper>} />
+        <Route path="/dashboard" element={<PageWrapper><UserDashboard /></PageWrapper>} />
         <Route path="/my-applications" element={<PageWrapper><MyApplications /></PageWrapper>} />
+        <Route path="/my-blogs" element={<PageWrapper><MyBlogs /></PageWrapper>} />
+        <Route path="/write-blog" element={<PageWrapper><WriteBlog /></PageWrapper>} />
 
         {/* ── Admin ── */}
         <Route
@@ -235,9 +252,17 @@ const AnimatedRoutes = () => {
             </PageWrapper>
           }
         />
+        <Route
+          path="/admin/blogs"
+          element={
+            <PageWrapper>
+              <AdminRoute><BlogManagement /></AdminRoute>
+            </PageWrapper>
+          }
+        />
 
         {/* ── Legal ── */}
-        <Route path="/privacy-policy"       element={<PageWrapper><PrivacyPolicy /></PageWrapper>} />
+        <Route path="/privacy-policy" element={<PageWrapper><PrivacyPolicy /></PageWrapper>} />
         <Route path="/terms-and-conditions" element={<PageWrapper><TermsAndConditions /></PageWrapper>} />
 
         {/* ── SkillArc (do not touch) ── */}
@@ -266,6 +291,7 @@ const App = () => {
     <Router basename={import.meta.env.BASE_URL}>
       <AuthProvider>
         <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+          <AnimatedBackground />
           <ScrollToTop />
           <MouseFollower />
           <MouseParallax />

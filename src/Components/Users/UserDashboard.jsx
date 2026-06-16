@@ -139,7 +139,7 @@ const UserDashboard = () => {
 
         .ud {
           min-height: 100vh;
-          background: #050505;
+          background: transparent;
           color: #e2e8f0;
           font-family: 'Share Tech Mono', monospace;
           padding: clamp(5rem, 10vw, 7rem) 0 4rem;
@@ -588,7 +588,7 @@ const UserDashboard = () => {
             <div className="ud-nav">
               {[
                 { tab: "applications", icon: "📋", label: "MY APPLICATIONS" },
-                { tab: "documents",    icon: "📁", label: "MY DOCUMENTS", badge: documents.length > 0 ? documents.length : null },
+                { tab: "documents", icon: "📁", label: "MY DOCUMENTS", badge: documents.length > 0 ? documents.length : null },
               ].map(({ tab, icon, label, badge }) => (
                 <button
                   key={tab}
@@ -599,6 +599,17 @@ const UserDashboard = () => {
                   {badge && <span className="ud-nav-badge">{badge}</span>}
                 </button>
               ))}
+
+              {/* My Blogs — only visible to interns */}
+              {internData?.intern_id && (
+                <button
+                  className={"ud-nav-item" + (activeTab === "blogs" ? " active" : "")}
+                  onClick={() => setActiveTab("blogs")}
+                >
+                  <span>📝</span> MY BLOGS
+                </button>
+              )}
+
               <button className="ud-nav-item" onClick={() => navigate("/Career")}>
                 <span>🎯</span> INTERNSHIPS
               </button>
@@ -832,6 +843,35 @@ const UserDashboard = () => {
                     })}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* ── BLOGS TAB ── */}
+            {activeTab === "blogs" && (
+              <div>
+                <div className="ud-section-title">// blogs.manager</div>
+                <div
+                  style={{
+                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid rgba(250,204,21,0.12)",
+                    borderRadius: "14px",
+                    padding: "22px",
+                  }}
+                >
+                  <div
+                    style={{
+                      color: "#fff",
+                      marginBottom: "16px",
+                      fontFamily: "'Orbitron', monospace",
+                      letterSpacing: "1px",
+                    }}
+                  >
+                    Manage your blog articles
+                  </div>
+                  <button className="ud-apply-btn" onClick={() => navigate("/write-blog")}>
+                    WRITE BLOG →
+                  </button>
+                </div>
               </div>
             )}
 

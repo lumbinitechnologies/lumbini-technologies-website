@@ -327,7 +327,7 @@ const AnalyticsDashboard = () => {
 
   /* ── BOOT SCREEN ── */
   if (!booted) return (
-    <div style={{ minHeight: "100vh", background: "#030508", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Space Mono',monospace", padding: "0 24px" }}>
+    <div style={{ minHeight: "100vh", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Space Mono',monospace", padding: "0 24px" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap');
         @keyframes an-bootfade{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
@@ -351,7 +351,7 @@ const AnalyticsDashboard = () => {
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
         :root{
           --y:#facc15;--g:#39ff14;--b:#60a5fa;--r:#f87171;--o:#fb923c;--p:#a78bfa;
-          --bg:#030508;--border:rgba(255,255,255,0.055);
+          --bg:transparent;--border:rgba(255,255,255,0.055);
           --mono:'Space Mono',monospace;--sans:'Syne',sans-serif;
         }
 

@@ -116,9 +116,9 @@ const Career = () => {
         /* ── Base ── */
         .career-page {
           min-height: 100vh;
-          background: #050505;
+          background: transparent;
           color: #fff;
-          font-family: 'Share Tech Mono', monospace;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           overflow-x: hidden;
           position: relative;
         }
@@ -142,11 +142,11 @@ const Career = () => {
           background:
             radial-gradient(ellipse 80% 60% at 50% 0%, rgba(250,204,21,0.07) 0%, transparent 70%),
             radial-gradient(ellipse 50% 40% at 80% 80%, rgba(57,255,20,0.04) 0%, transparent 60%),
-            #050505;
+            transparent;
           border-bottom: 1px solid rgba(250,204,21,0.12);
         }
 
-        .hero-content { max-width: 64rem; margin: 0 auto; text-align: center; }
+        .hero-content { max-width: 80rem; margin: 0 auto; text-align: center; }
 
         /* Terminal top bar */
         .terminal-bar {
@@ -161,6 +161,7 @@ const Career = () => {
           font-size: 0.7rem;
           color: #39ff14;
           letter-spacing: 0.12em;
+          font-family: 'Share Tech Mono', monospace;
         }
 
         .terminal-dot {
@@ -181,7 +182,7 @@ const Career = () => {
         }
 
         .hero-title {
-          font-family: 'Orbitron', monospace;
+          font-family: 'Orbitron', sans-serif;
           font-size: clamp(1.7rem, 5vw, 3.5rem);
           font-weight: 900;
           line-height: 1.1;
@@ -200,6 +201,7 @@ const Career = () => {
           margin-bottom: 2.5rem;
           letter-spacing: 0.08em;
           line-height: 1.7;
+          font-family: 'Share Tech Mono', monospace;
         }
 
         /* Stats */
@@ -209,7 +211,9 @@ const Career = () => {
         }
 
         .stat-card {
-          background: rgba(255,255,255,0.03);
+          background: rgba(5, 5, 10, 0.45);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           border: 1px solid rgba(255,255,255,0.1);
           border-radius: 8px;
           padding: 1.2rem 1.5rem;
@@ -244,6 +248,7 @@ const Career = () => {
           font-size: 0.65rem; color: rgba(255,255,255,0.4);
           margin-top: 0.4rem; letter-spacing: 0.1em;
           text-transform: uppercase;
+          font-family: 'Share Tech Mono', monospace;
         }
 
         /* Info banner */
@@ -254,12 +259,15 @@ const Career = () => {
           border-radius: 6px;
           padding: 0.85rem 1.1rem;
           text-align: left;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
         }
 
         .info-banner-label {
           font-size: 0.62rem; color: #39ff14;
           letter-spacing: 0.2em; text-transform: uppercase;
           margin-bottom: 0.35rem;
+          font-family: 'Share Tech Mono', monospace;
         }
 
         .info-text {
@@ -275,11 +283,11 @@ const Career = () => {
           padding: clamp(3rem, 7vw, 5rem) clamp(1rem, 5vw, 3rem);
           background:
             radial-gradient(ellipse 60% 50% at 10% 50%, rgba(57,255,20,0.03) 0%, transparent 60%),
-            #080808;
+            transparent;
           border-bottom: 1px solid rgba(255,255,255,0.06);
         }
 
-        .section-container { max-width: 72rem; margin: 0 auto; }
+        .section-container { max-width: 88rem; margin: 0 auto; }
 
         .section-header {
           text-align: center;
@@ -290,10 +298,11 @@ const Career = () => {
           font-size: 0.65rem; color: #39ff14;
           letter-spacing: 0.2em; text-transform: uppercase;
           margin-bottom: 0.5rem;
+          font-family: 'Share Tech Mono', monospace;
         }
 
         .section-title {
-          font-family: 'Orbitron', monospace;
+          font-family: 'Orbitron', sans-serif;
           font-size: clamp(1.2rem, 3vw, 1.8rem);
           font-weight: 900; color: #fff;
           letter-spacing: 2px; text-transform: uppercase;
@@ -307,7 +316,9 @@ const Career = () => {
         }
 
         .benefit-card {
-          background: rgba(255,255,255,0.02);
+          background: rgba(5, 5, 10, 0.45);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           border-radius: 10px;
           padding: 1.75rem 1.5rem;
           text-align: center;
@@ -345,6 +356,7 @@ const Career = () => {
           text-transform: uppercase;
           color: var(--card-accent, #facc15);
           margin-bottom: 1rem; opacity: 0.7;
+          font-family: 'Share Tech Mono', monospace;
         }
 
         .benefit-icon {
@@ -355,7 +367,7 @@ const Career = () => {
         }
 
         .benefit-title {
-          font-family: 'Orbitron', monospace;
+          font-family: 'Orbitron', sans-serif;
           font-size: clamp(0.75rem, 1.4vw, 0.9rem);
           font-weight: 700; color: #fff;
           margin-bottom: 0.75rem; letter-spacing: 1px;
@@ -373,7 +385,7 @@ const Career = () => {
           padding: clamp(3rem, 7vw, 5rem) clamp(1rem, 5vw, 3rem);
           background:
             radial-gradient(ellipse 60% 50% at 90% 50%, rgba(250,204,21,0.04) 0%, transparent 60%),
-            #050505;
+            transparent;
         }
 
         .jobs-grid {
@@ -382,7 +394,9 @@ const Career = () => {
         }
 
         .job-card {
-          background: rgba(250,204,21,0.03);
+          background: rgba(5, 5, 10, 0.45);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           border: 1px solid rgba(250,204,21,0.2);
           border-radius: 10px;
           padding: clamp(1.2rem, 2.5vw, 1.75rem);
@@ -422,10 +436,11 @@ const Career = () => {
         .job-status-label {
           font-size: 0.62rem; color: #39ff14;
           letter-spacing: 0.18em; text-transform: uppercase;
+          font-family: 'Share Tech Mono', monospace;
         }
 
         .job-title {
-          font-family: 'Orbitron', monospace;
+          font-family: 'Orbitron', sans-serif;
           font-size: clamp(1rem, 2vw, 1.2rem);
           font-weight: 700; color: #fff;
           margin-bottom: 0.75rem; letter-spacing: 1px;
@@ -568,7 +583,7 @@ const Career = () => {
               {benefits.map((benefit, index) => {
                 const cardClass =
                   benefit.accent === "#facc15" ? "yellow-card" :
-                  benefit.accent === "#39ff14" ? "green-card"  : "white-card";
+                    benefit.accent === "#39ff14" ? "green-card" : "white-card";
                 return (
                   <motion.div
                     key={index}

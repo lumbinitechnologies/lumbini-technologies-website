@@ -86,7 +86,7 @@ const MyApplications = () => {
 
         .myapp-page {
           min-height: 100vh;
-          background: #050505;
+          background: transparent;
           color: #e2e8f0;
           font-family: 'Share Tech Mono', monospace;
           padding: clamp(6rem, 12vw, 9rem) clamp(1rem, 5vw, 3rem) 4rem;

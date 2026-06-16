@@ -79,9 +79,9 @@ const CSS = `
   /* ─── PAGE ─── */
   .tc-page {
     min-height: 100vh;
-    background: #040404;
+    background: transparent;
     color: #e2e8f0;
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     padding: clamp(5rem,10vw,8rem) clamp(0.75rem,4vw,2.5rem) clamp(3rem,6vw,5rem);
     position: relative; overflow-x: hidden;
   }
@@ -97,11 +97,11 @@ const CSS = `
       linear-gradient(rgba(57,255,20,0.01) 1px, transparent 1px),
       linear-gradient(90deg, rgba(57,255,20,0.01) 1px, transparent 1px);
     background-size:40px 40px;
-    pointer-events:none; z-index:0;
+    pointer-events:none; z-index:1;
   }
   .tc-inner {
-    position:relative; z-index:1;
-    max-width:820px; margin:0 auto; width:100%;
+    position:relative; z-index:5;
+    max-width:1100px; margin:0 auto; width:100%;
   }
 
   /* ─── TERMINAL BAR ─── */
@@ -113,6 +113,7 @@ const CSS = `
     padding:0.42rem clamp(0.6rem,2vw,1rem);
     font-size:clamp(0.5rem,1.2vw,0.6rem);
     letter-spacing:0.12em; color:#39ff14; overflow:hidden;
+    font-family: 'Share Tech Mono', monospace;
   }
   .tc-tbar-dots { display:flex; gap:5px; flex-shrink:0; }
   .tc-tbar-dot  { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
@@ -142,11 +143,14 @@ const CSS = `
     border-left:1px solid rgba(57,255,20,0.1);
     border-right:1px solid rgba(57,255,20,0.1);
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    font-family: 'Share Tech Mono', monospace;
   }
 
   /* ─── HEADER ─── */
   .tc-header {
-    background:rgba(4,4,4,0.98);
+    background: rgba(5, 5, 10, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border:1px solid rgba(250,204,21,0.14); border-top:none;
     padding:clamp(1.4rem,4vw,2.5rem) clamp(1rem,4vw,2.5rem) clamp(1rem,3vw,1.75rem);
     position:relative; overflow:hidden;
@@ -168,7 +172,7 @@ const CSS = `
     margin-bottom:8px; animation:warningPulse 3s ease-in-out infinite;
   }
   .tc-title {
-    font-family:'Orbitron',monospace;
+    font-family:'Orbitron', sans-serif;
     font-size:clamp(1.1rem,5vw,2.2rem);
     font-weight:900; color:#fff;
     letter-spacing:clamp(1px,0.4vw,3px);
@@ -181,6 +185,7 @@ const CSS = `
 
   .tc-meta {
     display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px;
+    font-family: 'Share Tech Mono', monospace;
   }
   .tc-meta-date {
     font-size:clamp(0.56rem,1.3vw,0.64rem);
@@ -213,7 +218,9 @@ const CSS = `
 
   /* ─── BODY ─── */
   .tc-body {
-    background:rgba(4,4,4,0.98);
+    background: rgba(5, 5, 10, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border:1px solid rgba(255,255,255,0.05); border-top:none;
     border-radius:0 0 14px 14px;
     padding:clamp(1.2rem,4vw,2.5rem);

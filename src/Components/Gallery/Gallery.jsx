@@ -52,9 +52,9 @@ const CSS = `
   /* ── Page ── */
   .gal-page {
     min-height:100vh;
-    background:#040404;
+    background:transparent;
     color:#e2e8f0;
-    font-family:'Share Tech Mono', monospace;
+    font-family:'Plus Jakarta Sans', sans-serif;
     position:relative; overflow-x:hidden;
   }
   .gal-page::before {
@@ -69,12 +69,12 @@ const CSS = `
       linear-gradient(rgba(57,255,20,0.01) 1px,transparent 1px),
       linear-gradient(90deg,rgba(57,255,20,0.01) 1px,transparent 1px);
     background-size:40px 40px;
-    pointer-events:none; z-index:0;
+    pointer-events:none; z-index:1;
   }
 
   /* ── Hero ── */
   .gal-hero {
-    position:relative; z-index:1;
+    position:relative; z-index:5;
     padding: clamp(5rem,12vw,9rem) clamp(1rem,5vw,3rem) clamp(3rem,7vw,5rem);
     background:
       radial-gradient(ellipse 80% 60% at 50% 0%, rgba(250,204,21,0.07) 0%, transparent 70%),
@@ -83,7 +83,7 @@ const CSS = `
     text-align:center;
     border-bottom:1px solid rgba(250,204,21,0.1);
   }
-  .gal-hero-inner { max-width:64rem; margin:0 auto; position:relative; z-index:1; }
+  .gal-hero-inner { max-width:80rem; margin:0 auto; position:relative; z-index:1; }
 
   /* terminal bar in hero */
   .gal-tbar {
@@ -93,6 +93,7 @@ const CSS = `
     border-radius:5px; padding:0.32rem 0.85rem;
     font-size:0.58rem; color:#39ff14; letter-spacing:0.12em;
     margin-bottom:1.75rem;
+    font-family:'Share Tech Mono', monospace;
   }
   .gal-tbar-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
   .gal-cursor {
@@ -135,10 +136,7 @@ const CSS = `
     padding:clamp(0.75rem,2vw,1.25rem) clamp(1rem,4vw,2rem);
     position:relative; z-index:10;
   }
-  .gal-filters-inner {
-    max-width:72rem; margin:0 auto;
-    display:flex; flex-direction:column; gap:0.85rem;
-  }
+  .gal-filters-inner { max-width:90rem; margin:0 auto; display:flex; flex-direction:column; gap:0.85rem; }
 
   /* search */
   .gal-search-wrap { position:relative; max-width:28rem; margin:0 auto; width:100%; }
@@ -191,8 +189,8 @@ const CSS = `
   }
 
   /* ── Gallery Grid ── */
-  .gal-section { padding:clamp(1.5rem,4vw,3rem) clamp(1rem,4vw,2rem); position:relative; z-index:1; }
-  .gal-container { max-width:72rem; margin:0 auto; }
+  .gal-section { padding:clamp(1.5rem,4vw,3rem) clamp(1rem,4vw,2rem); position:relative; z-index:5; }
+  .gal-container { max-width:90rem; margin:0 auto; }
   .gal-grid {
     display:grid; gap:clamp(1rem,2.5vw,1.75rem);
     grid-template-columns:repeat(auto-fill, minmax(clamp(240px,28vw,320px),1fr));

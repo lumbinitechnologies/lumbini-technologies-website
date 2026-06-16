@@ -268,12 +268,12 @@ export default function Footer() {
             <h3 className="footer-title">Quick Links</h3>
             <ul className="footer-list">
               {[
-                { to: "/",            label: "Home"     },
-                { to: "/About",       label: "About Us" },
+                { to: "/", label: "Home" },
+                { to: "/About", label: "About Us" },
                 { to: "/ServicePage", label: "Services" },
-                { to: "/Products",    label: "Products" },
-                { to: "/Career",      label: "Careers"  },
-                { to: "/Contact",     label: "Contact"  },
+                { to: "/Products", label: "Products" },
+                { to: "/Career", label: "Careers" },
+                { to: "/Contact", label: "Contact" },
               ].map(({ to, label }) => (
                 <li key={to}><Link to={to} className="footer-link">{label}</Link></li>
               ))}
@@ -285,7 +285,7 @@ export default function Footer() {
             <h3 className="footer-title">Contact</h3>
             <ul className="footer-list">
               <li className="footer-contact"><MapPin size={16} /> Vijayawada, India</li>
-              <li className="footer-contact"><Mail size={16} /> lumbini.technologies01@gmail.com</li>
+              <li className="footer-contact"><Mail size={16} /> admin@lumbinitechnologies.com</li>
               <li className="footer-contact"><Phone size={16} /> +91 98482 94006</li>
             </ul>
           </div>
@@ -328,7 +328,7 @@ export default function Footer() {
             <a href="https://www.linkedin.com/company/lumbini-technologies/?viewAsMember=true" target="_blank" rel="noreferrer">
               <Linkedin size={18} />
             </a>
-            <a href="https://www.instagram.com/lumbini_technologies/" target="_blank" rel="noreferrer">
+            <a href="https://www.instagram.com/lumbini_technologies_/" target="_blank" rel="noreferrer">
               <Instagram size={18} />
             </a>
           </div>
