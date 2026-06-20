@@ -123,6 +123,20 @@ const Career = () => {
           position: relative;
         }
 
+        /* Dark overlay over background image — Option 1 */
+        .career-page::after {
+          content: "";
+          position: fixed;
+          inset: 0;
+          background: linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.55),
+            rgba(0, 0, 0, 0.70)
+          );
+          pointer-events: none;
+          z-index: -1;
+        }
+
         /* Subtle scanline overlay */
         .career-page::before {
           content: '';
@@ -146,7 +160,26 @@ const Career = () => {
           border-bottom: 1px solid rgba(250,204,21,0.12);
         }
 
-        .hero-content { max-width: 80rem; margin: 0 auto; text-align: center; }
+        /* Option 2 — hero-specific overlay so content sits above it */
+        .hero-section::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.45),
+            rgba(0, 0, 0, 0.65)
+          );
+          z-index: 0;
+        }
+
+        .hero-content {
+          max-width: 80rem;
+          margin: 0 auto;
+          text-align: center;
+          position: relative;
+          z-index: 1;
+        }
 
         /* Terminal top bar */
         .terminal-bar {
@@ -192,8 +225,9 @@ const Career = () => {
           animation: glitchBlink 7s infinite;
         }
 
-        .text-yellow { color: #facc15; text-shadow: 0 0 20px rgba(250,204,21,0.5); }
-        .text-green  { color: #39ff14; text-shadow: 0 0 16px rgba(57,255,20,0.5); }
+        /* Reduced glow — was 20px / 16px, now 8px / 8px at 25% opacity */
+        .text-yellow { color: #facc15; text-shadow: 0 0 8px rgba(250,204,21,0.25); }
+        .text-green  { color: #39ff14; text-shadow: 0 0 8px rgba(57,255,20,0.25); }
 
         .hero-subtitle {
           font-size: clamp(0.8rem, 1.6vw, 1rem);

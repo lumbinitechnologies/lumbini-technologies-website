@@ -1,6 +1,10 @@
 // ServicePage.jsx
 import React, { useEffect, useRef } from "react";
 import { motion, useInView } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import Lottie from "lottie-react";
+import techAnimation from "../../assets/lottie/tech.json";
+import electricAnimation from "../../assets/lottie/electric.json";
 
 const Icon = ({ d, size = 22 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
@@ -56,6 +60,14 @@ const digitalServices = [
     size: "small",
   },
   {
+    title: "UI/UX Design",
+    icon: "grid",
+    label: "Design · Prototype · Experience",
+    desc: "User-centered interfaces and digital experiences designed to improve engagement and usability.",
+    subs: ["UI Design", "UX Research", "Wireframing", "Prototyping"],
+    size: "small",
+  },
+  {
     title: "Data & Analytics",
     icon: "data",
     label: "Pipelines · BI · Real-time",
@@ -104,7 +116,6 @@ const ElectricCanvas = () => {
     resize();
     window.addEventListener("resize", resize);
 
-    /* Draw a jagged lightning bolt between two points */
     const bolt = (x1, y1, x2, y2, roughness, depth, alpha) => {
       if (depth === 0 || alpha < 0.04) return;
       const mx = (x1 + x2) / 2 + (Math.random() - 0.5) * roughness;
@@ -118,7 +129,6 @@ const ElectricCanvas = () => {
       ctx.stroke();
       if (Math.random() > 0.45) bolt(x1, y1, mx, my, roughness * 0.55, depth - 1, alpha * 0.7);
       if (Math.random() > 0.45) bolt(mx, my, x2, y2, roughness * 0.55, depth - 1, alpha * 0.7);
-      /* Occasional branch */
       if (depth > 1 && Math.random() > 0.65) {
         const bx = mx + (Math.random() - 0.5) * roughness * 1.5;
         const by = my + (Math.random() - 0.5) * roughness * 1.5;
@@ -126,7 +136,6 @@ const ElectricCanvas = () => {
       }
     };
 
-    /* Fixed arc nodes — pairs that light up */
     const nodes = () => {
       const w = canvas.width;
       const h = canvas.height;
@@ -138,7 +147,6 @@ const ElectricCanvas = () => {
       ];
     };
 
-    /* Ambient glow particles */
     const particles = Array.from({ length: 28 }, () => ({
       x: Math.random(),
       y: Math.random(),
@@ -155,7 +163,6 @@ const ElectricCanvas = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       t += 0.012;
 
-      /* Particles */
       const w = canvas.width;
       const h = canvas.height;
       particles.forEach(p => {
@@ -170,7 +177,6 @@ const ElectricCanvas = () => {
         ctx.fill();
       });
 
-      /* Horizontal current lines */
       for (let i = 0; i < 3; i++) {
         const y = h * (0.25 + i * 0.25);
         const phase = t + i * 1.2;
@@ -184,7 +190,6 @@ const ElectricCanvas = () => {
         ctx.stroke();
       }
 
-      /* Bolts */
       boltTimer++;
       if (boltTimer > 28 + Math.random() * 40) {
         boltTimer = 0;
@@ -228,6 +233,20 @@ const ElectricIcon = ({ d }) => (
   </div>
 );
 
+/* ── Section header: lottie icon + label (used for Engineering Solutions) ── */
+const SectionIconHeader = ({ animationData, num, text, variant }) => (
+  <div className={`sp-icon-header${variant ? ` sp-icon-header--${variant}` : ""}`}>
+    <div className="sp-icon-header-lottie" aria-hidden="true">
+      <Lottie animationData={animationData} loop autoplay />
+    </div>
+    <div className="sp-label">
+      <span className="sp-label-num">{num}</span>
+      <span className="sp-label-text">{text}</span>
+      <div className="sp-label-line" />
+    </div>
+  </div>
+);
+
 /* ── Scroll reveal helper ── */
 const Reveal = ({ children, delay = 0, className, style }) => {
   const ref = useRef(null);
@@ -266,6 +285,25 @@ const css = `
   background: radial-gradient(ellipse 80% 60% at 30% 50%, rgba(250,204,21,0.06) 0%, transparent 65%);
   pointer-events: none;
 }
+.sp-hero-bar {
+  position: absolute; left: clamp(0.75rem, 2.5vw, 2rem);
+  top: 28%; bottom: 28%; width: 2px; border-radius: 2px;
+  background: linear-gradient(180deg, transparent, #facc15 40%, #39ff14 75%, transparent);
+  opacity: 0.4;
+}
+.sp-hero-grid {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(2rem, 5vw, 4rem);
+  flex-wrap: wrap;
+}
+.sp-hero-content {
+  flex: 1 1 460px;
+  min-width: 280px;
+}
 .sp-hero-eyebrow {
   display: inline-flex; align-items: center; gap: 8px;
   font-family: 'Share Tech Mono', monospace;
@@ -288,11 +326,17 @@ const css = `
   color: rgba(255,255,255,0.58); line-height: 1.85;
   max-width: 560px; margin: 0;
 }
-.sp-hero-bar {
-  position: absolute; left: clamp(0.75rem, 2.5vw, 2rem);
-  top: 28%; bottom: 28%; width: 2px; border-radius: 2px;
-  background: linear-gradient(180deg, transparent, #facc15 40%, #39ff14 75%, transparent);
-  opacity: 0.4;
+.sp-hero-lottie {
+  width: clamp(190px, 22vw, 290px);
+  height: clamp(190px, 22vw, 290px);
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 26px rgba(250,204,21,0.32));
+}
+.sp-hero-lottie svg,
+.sp-hero-lottie > div {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
 
 /* ── SECTION SHELL ── */
@@ -329,6 +373,36 @@ const css = `
 .sp-label-line {
   flex: 1; height: 1px;
   background: linear-gradient(90deg, rgba(255,255,255,0.08), transparent);
+}
+
+/* ── SECTION ICON HEADER (Lottie icon + label — Engineering Solutions) ──
+   Lives in normal document flow inside the content layer, so it always
+   renders above the background canvas / scanline effects — no z-index
+   fights, no visibility issues. ── */
+.sp-icon-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 0.3rem;
+}
+.sp-icon-header .sp-label {
+  margin-bottom: 0;
+  flex: 1;
+}
+.sp-icon-header-lottie {
+  width: 76px;
+  height: 76px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 10px rgba(250,204,21,0.28));
+}
+.sp-icon-header-lottie svg,
+.sp-icon-header-lottie > div {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+.sp-icon-header--electric .sp-icon-header-lottie {
+  filter: drop-shadow(0 0 14px rgba(57,255,20,0.4));
 }
 
 /* ════════════════════════════
@@ -446,8 +520,6 @@ const css = `
   border-top: 1px solid rgba(250,204,21,0.12);
   border-bottom: 1px solid rgba(250,204,21,0.12);
 }
-
-/* Scanline overlay */
 .sp-eng-outer::after {
   content: '';
   position: absolute; inset: 0;
@@ -460,18 +532,15 @@ const css = `
   );
   pointer-events: none; z-index: 1;
 }
-
 .sp-eng-inner {
   position: relative; z-index: 2;
 }
-
 .sp-eng-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0;
   max-width: 1480px; margin: 0 auto;
 }
-
 .sp-eng-card {
   padding: clamp(2rem, 4vw, 3rem) clamp(1.5rem, 3vw, 2.4rem);
   border-right: 1px solid rgba(250,204,21,0.1);
@@ -481,8 +550,6 @@ const css = `
 }
 .sp-eng-card:last-child { border-right: none; }
 .sp-eng-card:hover { background: rgba(250,204,21,0.035); }
-
-/* Left accent bar on hover */
 .sp-eng-card::before {
   content: ''; position: absolute;
   left: 0; top: 18%; bottom: 18%; width: 2px;
@@ -491,8 +558,6 @@ const css = `
   transition: opacity 0.32s;
 }
 .sp-eng-card:hover::before { opacity: 0.7; }
-
-/* Electric shimmer line across top of card on hover */
 .sp-eng-card::after {
   content: ''; position: absolute;
   top: 0; left: -100%; width: 100%; height: 1px;
@@ -501,7 +566,6 @@ const css = `
 }
 .sp-eng-card:hover::after { left: 100%; }
 
-/* ── Icon wrap with arc ring ── */
 .sp-eng-icon-wrap {
   position: relative;
   width: 54px; height: 54px;
@@ -520,13 +584,11 @@ const css = `
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
-/* On hover: speed up and glow */
 .sp-eng-card:hover .sp-eng-icon-arc {
   animation-duration: 0.9s;
   border-color: rgba(250,204,21,0.8);
   box-shadow: 0 0 12px rgba(250,204,21,0.4), 0 0 28px rgba(57,255,20,0.2);
 }
-
 .sp-eng-icon {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
@@ -537,8 +599,6 @@ const css = `
   color: #fff;
   filter: drop-shadow(0 0 6px rgba(250,204,21,0.8));
 }
-
-/* Voltage badge */
 .sp-eng-badge {
   display: inline-flex; align-items: center; gap: 5px;
   font-family: 'Share Tech Mono', monospace;
@@ -568,7 +628,6 @@ const css = `
   0%,100% { opacity: 1; box-shadow: 0 0 6px #39ff14; }
   50%     { opacity: 0.4; box-shadow: 0 0 2px #39ff14; }
 }
-
 .sp-eng-card h3 {
   font-family: 'Orbitron', sans-serif;
   font-size: clamp(0.95rem, 1.5vw, 1.1rem);
@@ -576,14 +635,12 @@ const css = `
   transition: color 0.25s;
 }
 .sp-eng-card:hover h3 { color: #facc15; }
-
 .sp-eng-sublabel {
   font-family: 'Share Tech Mono', monospace;
   font-size: clamp(0.65rem, 0.9vw, 0.72rem);
   letter-spacing: 0.14em; text-transform: uppercase;
   color: rgba(255,255,255,0.25); margin-bottom: 1.2rem; display: block;
 }
-
 .sp-eng-subs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .sp-eng-subs li {
   font-size: clamp(0.82rem, 1.1vw, 0.92rem);
@@ -724,9 +781,13 @@ const css = `
   .sp-eng-card:nth-child(2n) { border-right: none; }
   .sp-process-grid { grid-template-columns: repeat(2, 1fr); }
   .sp-process-grid::before { display: none; }
+  .sp-icon-header-lottie { width: 62px; height: 62px; }
+  .sp-hero-lottie { width: clamp(160px, 20vw, 220px); height: clamp(160px, 20vw, 220px); }
 }
 @media (max-width: 768px) {
   .sp-hero-bar { display: none; }
+  .sp-hero-grid { flex-direction: column; align-items: flex-start; gap: 2.2rem; }
+  .sp-hero-lottie { width: 170px; height: 170px; align-self: center; }
   .sp-bento { grid-template-columns: 1fr; gap: 11px; }
   .sp-bento-large, .sp-bento-small, .sp-bento-wide { grid-column: span 1; }
   .sp-bcard--h { flex-direction: column; }
@@ -735,9 +796,15 @@ const css = `
   .sp-eng-card { border-right: none; }
   .sp-process-grid { grid-template-columns: repeat(2, 1fr); }
   .sp-cta-sec { flex-direction: column; align-items: flex-start; }
+
+  .sp-icon-header { gap: 13px; }
+  .sp-icon-header-lottie { width: 50px; height: 50px; }
 }
 @media (max-width: 480px) {
   .sp-process-grid { grid-template-columns: 1fr; }
+  .sp-icon-header-lottie { width: 42px; height: 42px; }
+  .sp-label-text { font-size: 0.66rem; }
+  .sp-hero-lottie { width: 130px; height: 130px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -748,6 +815,8 @@ const css = `
 `;
 
 const ServicePage = () => {
+  const navigate = useNavigate();
+
   useEffect(() => {
     const id = "lumbini-sp-v5";
     if (!document.getElementById(id)) {
@@ -768,15 +837,22 @@ const ServicePage = () => {
       {/* ── HERO ── */}
       <motion.div className="sp-hero" variants={fadeUp} transition={{ duration: 0.65 }}>
         <div className="sp-hero-bar" />
-        <div className="sp-hero-eyebrow">What We Deliver</div>
-        <h1>
-          Engineering & Technology<br />
-          <em>Built for Real Problems</em>
-        </h1>
-        <p className="sp-hero-desc">
-          From custom software and AI systems to electrical infrastructure and cloud platforms —
-          solutions designed around how your business actually works.
-        </p>
+        <div className="sp-hero-grid">
+          <div className="sp-hero-content">
+            <div className="sp-hero-eyebrow">What We Deliver</div>
+            <h1>
+              Engineering & Technology<br />
+              <em>Built for Real Problems</em>
+            </h1>
+            <p className="sp-hero-desc">
+              From custom software and AI systems to electrical infrastructure and cloud platforms —
+              solutions designed around how your business actually works.
+            </p>
+          </div>
+          <div className="sp-hero-lottie" aria-hidden="true">
+            <Lottie animationData={techAnimation} loop autoplay />
+          </div>
+        </div>
       </motion.div>
 
       {/* ── DIGITAL SOLUTIONS ── */}
@@ -835,17 +911,11 @@ const ServicePage = () => {
 
       {/* ── ENGINEERING SOLUTIONS — electric section ── */}
       <div className="sp-eng-outer">
-        {/* Live electric canvas */}
         <ElectricCanvas />
-
         <div className="sp-eng-inner">
           <motion.div className="sp-sec" style={{ paddingBottom: "0.5rem" }}
             initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.05 }} variants={stagger}>
-            <div className="sp-label">
-              <span className="sp-label-num">02</span>
-              <span className="sp-label-text">Engineering Solutions</span>
-              <div className="sp-label-line" />
-            </div>
+            <SectionIconHeader animationData={electricAnimation} num="02" text="Engineering Solutions" variant="electric" />
           </motion.div>
 
           <motion.div className="sp-eng-grid"
@@ -919,7 +989,9 @@ const ServicePage = () => {
             <h2>Ready to Build Something That Works?</h2>
             <p>Tell us your challenge. We'll respond with an honest assessment and a clear path forward.</p>
           </div>
-          <button className="sp-cta-btn">Contact Us</button>
+          <button className="sp-cta-btn" onClick={() => navigate("/contact")}>
+            Contact Us
+          </button>
         </motion.div>
       </div>
 

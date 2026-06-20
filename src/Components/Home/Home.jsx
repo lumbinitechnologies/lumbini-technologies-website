@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import IntroZoomOverlay from "../Effects/IntroZoomOverlay";
 import heroImage from "../../assets/front-bg.png";
 
@@ -108,6 +109,22 @@ const styles = `
     z-index: 5;
   }
 
+  .Hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.08) 0%,
+      rgba(0, 0, 0, 0.18) 40%,
+      rgba(0, 0, 0, 0.52) 62%,
+      rgba(0, 0, 0, 0.60) 78%,
+      rgba(0, 0, 0, 0.20) 100%
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
   .hero-text {
     max-width: 900px;
     margin-top: 0;
@@ -117,25 +134,30 @@ const styles = `
   }
 
   .hero-text h1 {
-    font-size: clamp(1.4rem, 4.5vw, 3.2rem);
-    font-weight: bold;
-    line-height: 1.2;
-    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
-    margin-bottom: clamp(0.8rem, 2vw, 1.4rem);
+    font-size: clamp(1.5rem, 4.8vw, 3.4rem);
+    font-weight: 800;
+    line-height: 1.18;
+    text-shadow:
+      0 2px 20px rgba(0, 0, 0, 0.6),
+      0 1px 4px rgba(0, 0, 0, 0.8);
+    margin-bottom: clamp(0.9rem, 2.2vw, 1.5rem);
+    letter-spacing: -0.01em;
+  }
+
+  .hero-text h1 .accent {
+    color: #facc15;
   }
 
   .hero-text p {
-    font-size: clamp(0.88rem, 2vw, 1.2rem);
-    color: rgba(255, 255, 255, 0.78);
-    line-height: 1.7;
+    font-size: clamp(0.9rem, 2vw, 1.18rem);
+    color: rgba(255, 255, 255, 0.88);
+    line-height: 1.75;
     max-width: 820px;
     margin: 0 auto;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
   }
 
   /* ---------- Shared section shell ---------- */
-  /* Every section below shares the same rhythm: eyebrow + line, heading,
-     optional lead paragraph, then content. This keeps spacing and type
-     scale consistent across the whole page. */
 
   .section-block {
     padding: clamp(2.5rem, 5vw, 4rem) clamp(1rem, 4vw, 3rem);
@@ -179,14 +201,16 @@ const styles = `
     font-weight: bold;
     color: white;
     margin: 0 0 clamp(0.8rem, 2vw, 1.2rem);
+    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.7);
   }
 
   .section-inner > p.section-lead {
     font-size: clamp(0.85rem, 1.8vw, 1.05rem);
-    color: rgba(255, 255, 255, 0.72);
+    color: rgba(255, 255, 255, 0.82);
     line-height: 1.8;
     max-width: 900px;
     margin: 0 auto clamp(2rem, 4vw, 3rem);
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
   }
 
   /* ---------- Heritage / stats (within hero) ---------- */
@@ -195,6 +219,25 @@ const styles = `
     margin-top: clamp(3rem, 6vw, 5.5rem);
     width: 100%;
     max-width: 1600px;
+    position: relative;
+    z-index: 4;
+  }
+
+  .engineering-section .section-inner h2 {
+    font-size: clamp(1.2rem, 3vw, 2.1rem);
+    font-weight: bold;
+    color: white;
+    margin: 0 0 clamp(0.8rem, 2vw, 1.2rem);
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.85), 0 2px 4px rgba(0, 0, 0, 0.9);
+  }
+
+  .engineering-section .section-lead {
+    font-size: clamp(0.85rem, 1.8vw, 1.05rem);
+    color: rgba(255, 255, 255, 0.88);
+    line-height: 1.8;
+    max-width: 900px;
+    margin: 0 auto clamp(2rem, 4vw, 3rem);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.7);
   }
 
   .stats-row {
@@ -233,15 +276,17 @@ const styles = `
     line-height: 1;
     letter-spacing: -0.01em;
     font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
   }
 
   .stat-item .stat-label {
     font-size: clamp(0.65rem, 1.15vw, 0.8rem);
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.80);
     margin-top: clamp(0.4rem, 1vw, 0.6rem);
     text-transform: uppercase;
     letter-spacing: 0.12em;
     line-height: 1.4;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
   }
 
   /* ---------- Value cards ---------- */
@@ -467,6 +512,7 @@ const sectionVariants = {
 };
 
 const Home = () => {
+  const navigate = useNavigate();
   const [showIntro, setShowIntro] = useState(false);
 
   useEffect(() => {
@@ -532,9 +578,14 @@ const Home = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
           >
-            <h1>Engineering Reliable Solutions<br />For a Digital World</h1>
+            <h1>
+              Your Vision, Our Technology
+              <br />
+              <span className="accent">—</span> A Perfect Match
+            </h1>
             <p>
-              We help organizations build reliable software, intelligent systems, and modern digital infrastructure designed for long term success.
+              Transforming ideas into powerful digital solutions through
+              innovation, engineering excellence, and customer-focused technology.
             </p>
           </motion.div>
 
@@ -652,7 +703,12 @@ const Home = () => {
               Whether you're planning a new digital product, modernizing infrastructure,
               or exploring AI solutions, our team is ready to help.
             </p>
-            <button className="cta-btn">Contact Us</button>
+            <button
+              className="cta-btn"
+              onClick={() => navigate("/contact")}
+            >
+              Contact Us
+            </button>
           </div>
         </motion.section>
       </div>

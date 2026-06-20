@@ -116,9 +116,11 @@ const Navbar = () => {
         /* ── Logo ── */
         .lt-logo {
           color: #fff;
+          font-family: 'Orbitron', sans-serif;
           font-weight: 700;
           text-decoration: none;
-          letter-spacing: -0.3px;
+          letter-spacing: 0.8px;
+          text-transform: none;
           white-space: nowrap;
           font-size: clamp(14px, 4vw, 22px);
           flex-shrink: 1;
