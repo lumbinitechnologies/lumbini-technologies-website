@@ -8,7 +8,8 @@ const AnimatedBackground = () => {
     if (!canvas) return;
 
     let animId;
-    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    const isMobile = window.innerWidth <= 768;
+    const DPR = Math.min(window.devicePixelRatio || 1, isMobile ? 1 : 2);
 
     const resize = () => {
       canvas.width = window.innerWidth * DPR;
@@ -27,7 +28,7 @@ const AnimatedBackground = () => {
     window.addEventListener("touchmove", onTouch, { passive: true });
 
     /* ── STARS ── */
-    const STAR_COUNT = 220;
+    const STAR_COUNT = isMobile ? 80 : 220;
     const stars = Array.from({ length: STAR_COUNT }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
@@ -37,25 +38,21 @@ const AnimatedBackground = () => {
       brightness: 0.35 + Math.random() * 0.65,
     }));
 
-    /* ── SHOOTING STARS — depth-varied sizes (near = big/fast, far = small/slow) ── */
+    /* ── SHOOTING STARS ── */
     const newShoot = () => {
       const W = canvas.width, H = canvas.height;
       const fromLeft = Math.random() > 0.5;
-      // depth: 0 = far away (small, slow, faint), 1 = near (big, fast, bright)
-      // more frequent big standout comets, otherwise skewed toward far/small
       const depth = Math.random() < 0.4
-        ? 0.7 + Math.random() * 0.3   // ~40% chance: big/near comet
-        : Math.sqrt(Math.random()) * 0.6; // otherwise: skewed toward far/small
+        ? 0.7 + Math.random() * 0.3
+        : Math.sqrt(Math.random()) * 0.6;
       const speed = (6 + depth * 14) + Math.random() * 3;
-      // shallow descending angle (15°–35°) so it always reads as a streak, never a vertical bar
       const angle = (15 + Math.random() * 20) * (Math.PI / 180);
       const vx = fromLeft ? speed * Math.cos(angle) : -speed * Math.cos(angle);
       const vy = speed * Math.sin(angle);
-      // hue: mostly cool white/cyan, occasionally warm gold (matches orbital particle palette)
       const warm = Math.random() < 0.25;
       return {
         x: fromLeft ? -40 : W + 40,
-        y: Math.random() * H, // full screen height
+        y: Math.random() * H,
         vx,
         vy,
         len: 75 + depth * 110,
@@ -69,10 +66,10 @@ const AnimatedBackground = () => {
     };
     const SHOOT_COUNT = 1;
     const shoots = Array.from({ length: SHOOT_COUNT }, () => ({ ...newShoot(), age: Math.random() * 100 }));
-    const FADE_FRAMES = 20; // frames to fade in/out at start/end of flight only
+    const FADE_FRAMES = 20;
 
-    /* ── PARTICLES — gold + cyan, like city lights from orbit ── */
-    const ORBS = 25;
+    /* ── PARTICLES ── */
+    const ORBS = isMobile ? 10 : 25;
     const orbs = Array.from({ length: ORBS }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
@@ -84,8 +81,7 @@ const AnimatedBackground = () => {
       trail: [],
     }));
 
-    /* Offscreen canvas for trails — so we can fade trails without
-       clearing the main canvas (which would wipe the body background) */
+    /* Offscreen trail canvas */
     const trail = document.createElement("canvas");
     trail.width = canvas.width;
     trail.height = canvas.height;
@@ -99,22 +95,26 @@ const AnimatedBackground = () => {
     let auroraT = 0;
     let t = 0;
 
+    /* ── Aurora: skip on mobile entirely (big perf win) ── */
+    const AURORA_BANDS = isMobile ? 0 : 3;
+
+    /* ── Connection distance: shorter on mobile = fewer line draws ── */
+    const CONN = isMobile ? 80 : 115;
+
     const draw = () => {
       const W = canvas.width, H = canvas.height;
       t += 0.009;
       auroraT += 0.0032;
 
-      /* ── Main canvas: fully clear each frame so body background shows ── */
       ctx.clearRect(0, 0, W, H);
 
-      /* ── Trail canvas: fade slowly for smooth particle tails ── */
       tctx.globalCompositeOperation = "destination-out";
       tctx.fillStyle = "rgba(0,0,0,0.18)";
       tctx.fillRect(0, 0, W, H);
       tctx.globalCompositeOperation = "source-over";
 
-      /* ── Aurora bands (very subtle so bg shows through) ── */
-      for (let band = 0; band < 3; band++) {
+      /* ── Aurora bands (desktop only) ── */
+      for (let band = 0; band < AURORA_BANDS; band++) {
         const hue = 155 + band * 45;
         const yBase = H * (0.08 + band * 0.055);
         ctx.beginPath();
@@ -155,7 +155,6 @@ const AnimatedBackground = () => {
       });
 
       /* ── Orbital particles ── */
-      const CONN = 115;
       orbs.forEach((p, i) => {
         p.phase += 0.013;
         const pullX = mx - p.x, pullY = my - p.y;
@@ -175,7 +174,6 @@ const AnimatedBackground = () => {
         if (p.y < 0) p.y = H;
         if (p.y > H) p.y = 0;
 
-        /* draw trail onto offscreen canvas */
         p.trail.push({ x: p.x, y: p.y });
         if (p.trail.length > 16) p.trail.shift();
         if (p.trail.length > 2) {
@@ -188,7 +186,6 @@ const AnimatedBackground = () => {
           tctx.stroke();
         }
 
-        /* connections on main canvas */
         for (let j = i + 1; j < orbs.length; j++) {
           const q = orbs[j];
           const dx = p.x - q.x, dy = p.y - q.y;
@@ -204,7 +201,6 @@ const AnimatedBackground = () => {
           }
         }
 
-        /* glow dot on main canvas */
         const gw = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 5.5);
         gw.addColorStop(0, `hsla(${p.hue},100%,92%,0.55)`);
         gw.addColorStop(0.3, `hsla(${p.hue},100%,65%,0.18)`);
@@ -219,12 +215,11 @@ const AnimatedBackground = () => {
         ctx.fill();
       });
 
-      /* blit trail canvas onto main (additive) */
       ctx.globalCompositeOperation = "screen";
       ctx.drawImage(trail, 0, 0);
       ctx.globalCompositeOperation = "source-over";
 
-      /* ── Shooting stars — travel fully across screen, fade only at entry/exit ── */
+      /* ── Shooting stars ── */
       shoots.forEach((s, i) => {
         s.x += s.vx;
         s.y += s.vy;
@@ -233,8 +228,6 @@ const AnimatedBackground = () => {
           shoots[i] = newShoot();
           return;
         }
-        // fade in over first FADE_FRAMES, fade out over last FADE_FRAMES before leaving screen
-        const speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
         const framesToExitX = s.vx > 0 ? (W + 300 - s.x) / s.vx : (s.x + 300) / -s.vx;
         const framesToExitY = (H + 300 - s.y) / s.vy;
         const framesToExit = Math.min(framesToExitX, framesToExitY);
@@ -246,10 +239,9 @@ const AnimatedBackground = () => {
         const ang = Math.atan2(s.vy, s.vx);
         const tx = s.x - Math.cos(ang) * s.len;
         const ty = s.y - Math.sin(ang) * s.len;
-        const peakAlpha = 0.35 + s.depth * 0.55; // far comets stay dimmer overall
+        const peakAlpha = 0.35 + s.depth * 0.55;
         const a = alpha * peakAlpha;
 
-        // color: cool (white/cyan) by default, warm (white/gold) for ~25% of comets
         const midColor = s.warm ? `rgba(255,214,150,${a * 0.5})` : `rgba(180,220,255,${a * 0.5})`;
         const sparkleColor = s.warm ? "255,224,170" : "200,230,255";
 
@@ -265,7 +257,6 @@ const AnimatedBackground = () => {
         ctx.lineTo(s.x, s.y);
         ctx.stroke();
 
-        // glowing head
         const headR = (4 + s.depth * 6) * (0.6 + 0.4 * alpha);
         const gw = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, headR);
         gw.addColorStop(0, `rgba(255,255,255,${a})`);
@@ -276,39 +267,36 @@ const AnimatedBackground = () => {
         ctx.fillStyle = gw;
         ctx.fill();
 
-        // spawn trailing sparkle particles (more for bigger/closer comets)
-        s.sparkleTimer += 1;
-        const spawnRate = Math.max(2, Math.round(5 - s.depth * 3));
-        if (alpha > 0.3 && s.sparkleTimer >= spawnRate) {
-          s.sparkleTimer = 0;
-          // place just behind the head, with slight jitter perpendicular to travel direction
-          const perp = ang + Math.PI / 2;
-          const jitter = (Math.random() - 0.5) * (2 + s.depth * 3);
-          s.sparkles.push({
-            x: tx + Math.cos(perp) * jitter,
-            y: ty + Math.sin(perp) * jitter,
-            r: (0.6 + Math.random() * 1) * (0.5 + s.depth * 0.8),
-            life: 1,
-          });
-        }
-        if (s.sparkles.length > 24) s.sparkles.splice(0, s.sparkles.length - 24);
-
-        // update & draw sparkles
-        for (let k = s.sparkles.length - 1; k >= 0; k--) {
-          const sp = s.sparkles[k];
-          sp.life -= 0.035;
-          if (sp.life <= 0) {
-            s.sparkles.splice(k, 1);
-            continue;
+        /* sparkles — skip on mobile for perf */
+        if (!isMobile) {
+          s.sparkleTimer += 1;
+          const spawnRate = Math.max(2, Math.round(5 - s.depth * 3));
+          if (alpha > 0.3 && s.sparkleTimer >= spawnRate) {
+            s.sparkleTimer = 0;
+            const perp = ang + Math.PI / 2;
+            const jitter = (Math.random() - 0.5) * (2 + s.depth * 3);
+            s.sparkles.push({
+              x: tx + Math.cos(perp) * jitter,
+              y: ty + Math.sin(perp) * jitter,
+              r: (0.6 + Math.random() * 1) * (0.5 + s.depth * 0.8),
+              life: 1,
+            });
           }
-          const sa = sp.life * a;
-          const sg = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, sp.r * 2.5);
-          sg.addColorStop(0, `rgba(255,255,255,${sa})`);
-          sg.addColorStop(1, "rgba(255,255,255,0)");
-          ctx.beginPath();
-          ctx.arc(sp.x, sp.y, sp.r * 2.5, 0, Math.PI * 2);
-          ctx.fillStyle = sg;
-          ctx.fill();
+          if (s.sparkles.length > 24) s.sparkles.splice(0, s.sparkles.length - 24);
+
+          for (let k = s.sparkles.length - 1; k >= 0; k--) {
+            const sp = s.sparkles[k];
+            sp.life -= 0.035;
+            if (sp.life <= 0) { s.sparkles.splice(k, 1); continue; }
+            const sa = sp.life * a;
+            const sg = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, sp.r * 2.5);
+            sg.addColorStop(0, `rgba(255,255,255,${sa})`);
+            sg.addColorStop(1, "rgba(255,255,255,0)");
+            ctx.beginPath();
+            ctx.arc(sp.x, sp.y, sp.r * 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = sg;
+            ctx.fill();
+          }
         }
       });
 
