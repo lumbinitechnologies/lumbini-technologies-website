@@ -101,11 +101,13 @@ const Navbar = () => {
           display: flex;
           justify-content: space-between;
           align-items: center;
+          flex-wrap: nowrap;
           padding: 18px 40px;
           background: transparent;
           transition: background 0.35s, box-shadow 0.35s;
           z-index: 1060;
           gap: 12px;
+          overflow: visible;
         }
         .lt-header.sticky {
           background: rgba(0,0,0,0.96);
@@ -122,9 +124,10 @@ const Navbar = () => {
           letter-spacing: 0.8px;
           text-transform: none;
           white-space: nowrap;
-          font-size: clamp(14px, 4vw, 22px);
+          font-size: clamp(13px, 3.5vw, 22px);
           flex-shrink: 1;
           min-width: 0;
+          max-width: calc(100% - 60px);
           overflow: hidden;
           text-overflow: ellipsis;
           display: flex;
@@ -140,32 +143,37 @@ const Navbar = () => {
           flex-direction: column;
           justify-content: center;
           align-items: center;
-          width: clamp(28px, 5vw, 36px);
-          height: clamp(28px, 5vw, 36px);
-          min-width: 28px;
+          width: 40px;
+          height: 40px;
+          min-width: 40px;
           flex-shrink: 0;
+          margin-left: auto;
           cursor: pointer;
-          gap: clamp(4px, 1vw, 6px);
+          gap: 5px;
           border: none;
           background: none;
-          padding: 0;
-          border-radius: 0;
+          padding: 4px;
+          border-radius: 6px;
           -webkit-tap-highlight-color: transparent;
           position: relative;
           z-index: 1070;
         }
+        .lt-hamburger:hover {
+          background: rgba(250,204,21,0.08);
+        }
         .lt-hamburger span {
           display: block;
-          width: clamp(18px, 4vw, 24px);
+          width: 22px;
           height: 2px;
           background: #facc15;
           border-radius: 2px;
           transition: transform 0.32s ease, opacity 0.22s ease, width 0.28s ease;
           transform-origin: center;
+          pointer-events: none;
         }
-        .lt-hamburger.open span:nth-child(1) { transform: translateY(clamp(6px,1.2vw,8px)) rotate(45deg); }
+        .lt-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
         .lt-hamburger.open span:nth-child(2) { opacity: 0; width: 0; }
-        .lt-hamburger.open span:nth-child(3) { transform: translateY(clamp(-6px,-1.2vw,-8px)) rotate(-45deg); }
+        .lt-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
         /* ── Desktop Nav ── */
         .lt-nav {
@@ -195,7 +203,6 @@ const Navbar = () => {
         /* ── About Dropdown ── */
         .lt-dropdown { position: relative; }
 
-        /* Invisible bridge fills the gap so mouse-leave doesn't fire mid-crossing */
         .lt-dropdown::after {
           content: '';
           position: absolute;
@@ -503,13 +510,8 @@ const Navbar = () => {
         .lt-drawer-ulink.logout:hover { color: #f87171; }
 
         /* ── Breakpoints ── */
-        @media (max-width: 900px) {
-          .lt-header { padding: 13px 16px; }
-          .lt-hamburger { display: flex; }
-          .lt-nav { display: none; }
-          .lt-drawer { display: flex; }
-        }
 
+        /* Tablet / mid-range: tighten nav, hide hamburger */
         @media (max-width: 1100px) and (min-width: 901px) {
           .lt-header { padding: 14px 24px; }
           .lt-nav { gap: 0; }
@@ -517,7 +519,20 @@ const Navbar = () => {
           .lt-nav .lt-dropdown-trigger { padding: 7px 9px; font-size: 14px; }
         }
 
+        /* Mobile: show hamburger, hide desktop nav + auth */
+        @media (max-width: 900px) {
+          .lt-header { padding: 13px 16px; gap: 8px; }
+          .lt-hamburger { display: flex; }
+          .lt-nav { display: none !important; }
+          .lt-auth { display: none !important; }
+          .lt-user { display: none !important; }
+          .lt-drawer { display: flex; }
+        }
+
+        /* Very small phones */
         @media (max-width: 380px) {
+          .lt-header { padding: 11px 12px; }
+          .lt-logo { font-size: 12px; }
           .lt-drawer { width: 92vw; padding-top: 62px; }
         }
       `}</style>

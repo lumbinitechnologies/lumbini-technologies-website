@@ -14,8 +14,12 @@ const styles = `
 
   .about-container {
     padding: 4rem 2rem;
+    padding-top: 0;
     color: white;
     background: transparent;
+    position: relative;
+    z-index: 1;
+    overflow-x: hidden;
   }
 
   /* ─── Shared headings ───────────────────────────────────────── */
@@ -33,7 +37,10 @@ const styles = `
   .about-intro {
     text-align: center;
     margin-bottom: 5rem;
-    margin-top: 8rem;
+    /* navbar is fixed ~64px tall on desktop, ~50px on mobile.
+       Use padding-top so the scrim ::before doesn't bleed into navbar space */
+    padding-top: 6rem;
+    margin-top: 0;
   }
 
   .about-intro h1 {
@@ -110,7 +117,7 @@ const styles = `
   .needs-scrim::before {
     content: "";
     position: absolute;
-    inset: -3rem -100vw;
+    inset: 0;
     background: radial-gradient(
       ellipse 90% 100% at 50% 50%,
       rgba(0, 0, 0, 0.38) 0%,
@@ -149,7 +156,8 @@ const styles = `
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     width: 320px;
-    height: 270px;
+    min-height: 270px;
+    height: auto;
     text-align: center;
     transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
     position: relative;
@@ -207,7 +215,8 @@ const styles = `
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     width: 300px;
-    height: 260px;
+    min-height: 260px;
+    height: auto;
     text-align: center;
     transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
   }
@@ -384,44 +393,68 @@ const styles = `
     margin: 0;
   }
 
-  /* ─── Responsive ────────────────────────────────────────────── */
+  /* ─── Tablet (769px – 1024px) ───────────────────────────────── */
 
   @media (max-width: 1024px) and (min-width: 769px) {
-    .about-container { padding: 3rem 1.5rem; }
-    .about-intro { margin-top: 7rem; }
-    .director-card { width: 280px; height: 250px; }
+    .about-container { padding: 0 1.5rem 3rem; }
+    .about-intro { padding-top: 5rem; }
+    .director-card { width: 280px; }
     .director-card img { width: 100px; height: 100px; }
-    .member-card { width: 260px; height: 250px; }
+    .member-card { width: 260px; }
     .member-card img { width: 100px; height: 100px; }
     .why-cards { grid-template-columns: repeat(2, 1fr); }
   }
 
+  /* ─── Mobile (≤ 768px) ──────────────────────────────────────── */
+
   @media (max-width: 768px) {
-    .about-container { padding: 2rem 1rem; }
-    .about-intro { margin-top: 6rem; margin-bottom: 3rem; }
-    .about-intro p, .mission-statement { font-size: 0.92rem; padding: 0 0.4rem; }
+    .about-container { padding: 0 1rem 2rem; }
+
+    /* padding-top instead of margin-top — keeps scrim contained */
+    .about-intro { padding-top: 4.5rem; margin-bottom: 3rem; }
+    .about-intro p { font-size: 0.92rem; padding: 0 0.4rem; }
+
+    .mission-statement { font-size: 0.92rem; padding: 0 0.4rem; }
+
     .our-journey { margin-bottom: 3rem; padding: 0 0.5rem; }
     .journey-block { padding: 1.1rem 1rem; }
     .journey-block p { font-size: 0.88rem; }
     .journey-divider { height: 22px; }
+
     .managing-director { margin-bottom: 3rem; }
-    .director-card { width: 100%; max-width: 340px; height: auto; padding: 1.4rem; }
+    .director-card {
+      width: 100%;
+      max-width: 340px;
+      min-height: unset;
+      height: auto;
+      padding: 1.4rem;
+    }
     .director-card img { width: 90px; height: 90px; margin-bottom: 1rem; }
     .director-card h4 { font-size: 0.95rem; }
+
+    /* 2-column grid for members on mobile */
     .member-cards {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 1rem;
       margin-bottom: 2rem;
     }
-    .member-card { width: 100%; height: auto; padding: 1.2rem; }
-    .member-card img { width: 80px; height: 80px; margin-bottom: 0.9rem; }
-    .member-card h4 { font-size: 0.9rem; }
+    .member-card {
+      width: 100%;
+      min-height: unset;
+      height: auto;
+      padding: 1.2rem 0.8rem;
+    }
+    .member-card img { width: 75px; height: 75px; margin-bottom: 0.9rem; }
+    .member-card h4 { font-size: 0.88rem; }
+    .member-card p { font-size: 0.8rem; }
+
     .testimonials { margin-top: 4rem; }
     .testimonial-cards { grid-template-columns: 1fr; gap: 1rem; }
     .testimonial { padding: 1.4rem; }
     .testimonial p { font-size: 0.88rem; }
     .testimonial h4 { font-size: 0.9rem; margin-top: 1rem; }
+
     .why-choose-us { margin-top: 4rem; margin-bottom: 2rem; }
     .why-cards { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
     .about-why-card { padding: 1.2rem 1rem; }
@@ -430,12 +463,27 @@ const styles = `
     .about-why-card p { font-size: 0.8rem; }
   }
 
+  /* ─── Small phones (≤ 480px) ────────────────────────────────── */
+
   @media (max-width: 480px) {
-    .about-container { padding: 1.5rem 0.6rem; }
-    .about-intro { margin-top: 5rem; margin-bottom: 2rem; }
+    .about-container { padding: 0 0.75rem 1.5rem; }
+    .about-intro { padding-top: 4rem; margin-bottom: 2rem; }
+
+    /* Stack member cards to single column on very small screens */
     .member-cards { grid-template-columns: 1fr; gap: 0.8rem; }
+    .member-card img { width: 80px; height: 80px; }
+
     .why-cards { grid-template-columns: 1fr; gap: 0.8rem; }
     .testimonial-cards { gap: 0.8rem; }
+
+    .clients-intro { font-size: 0.88rem; }
+  }
+
+  /* ─── Tiny phones (≤ 360px) ────────────────────────────────── */
+
+  @media (max-width: 360px) {
+    .about-container { padding: 0 0.5rem 1rem; }
+    .about-intro { padding-top: 3.5rem; }
   }
 `;
 
