@@ -4,8 +4,29 @@ import { supabase } from "../../services/supabase";
 import { jsPDF } from "jspdf";
 import signature from "../../assets/yeshraj_signature.png";
 
+// ── Date helpers ───────────────────────────────────────────────────────────
+const formatDisplayDate = (isoStr) => {
+  if (!isoStr) return "—";
+  const d = new Date(isoStr + "T00:00:00");
+  if (isNaN(d.getTime())) return isoStr;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+};
+
+const monthsBetween = (startIso, endIso) => {
+  if (!startIso || !endIso) return "";
+  const start = new Date(startIso + "T00:00:00");
+  const end = new Date(endIso + "T00:00:00");
+  if (isNaN(start) || isNaN(end) || end < start) return "";
+  let months =
+    (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+  if (end.getDate() < start.getDate()) months -= 1;
+  months = Math.max(months, 0);
+  return `${months} Month${months === 1 ? "" : "s"}`;
+};
+
 // ── Certificate PDF ───────────────────────────────────────────────────────────
-const buildCertificatePDF = (app) => {
+// dates = { issueDate, startDate, endDate }  (all ISO yyyy-mm-dd, pre-formatted before building)
+const buildCertificatePDF = (app, dates) => {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const W       = 210;
   const H       = 297;
@@ -15,9 +36,12 @@ const buildCertificatePDF = (app) => {
   const FOOTER_Y = H - 14;
   // Safe content zone: y=37 → y=FOOTER_Y-4 = 279  (242mm of usable height)
 
-  const issueDate = "31 December 2025";
+  const issueDate   = formatDisplayDate(dates.issueDate);
+  const periodStart = formatDisplayDate(dates.startDate);
+  const periodEnd   = formatDisplayDate(dates.endDate);
+  const period      = `${periodStart} – ${periodEnd}`;
+
   const name      = app.name       || "Intern Name";
-  const firstName = name.split(" ")[0];
   const university = app.university || "";
   const degree     = app.degree     || "";
   const role       = "Software Engineer Intern";
@@ -91,7 +115,7 @@ const buildCertificatePDF = (app) => {
   const para0 =
     `We are delighted to present this Certificate of Appreciation to ${name} in recognition of the ` +
     `dedication, hard work, and valuable contributions made during the internship programme at ` +
-    `Lumbini Technologies Private Limited from June 2025 to December 2025.`;
+    `Lumbini Technologies Private Limited from ${periodStart} to ${periodEnd}.`;
   doc.setFontSize(9.5);
   doc.splitTextToSize(para0, CW).forEach((l) => { doc.text(l, ML, y); y += 4.8; });
   y += 5;
@@ -103,7 +127,7 @@ const buildCertificatePDF = (app) => {
     ["Position",          role],
     ["Department",        "Engineering & Product"],
     ["Reporting To",      "Project Mentor / Team Lead"],
-    ["Internship Period",  "June 2025 – December 2025"],
+    ["Internship Period",  period],
     ["Mode",              "Hybrid / As Mutually Discussed"],
     ["Completion Date",   issueDate],
   ];
@@ -158,7 +182,7 @@ const buildCertificatePDF = (app) => {
   y += 7;
 
   const highlights = [
-    `${name} served as a ${role} from June 2025 to December 2025, demonstrating exemplary professionalism and commitment throughout.`,
+    `${name} served as a ${role} from ${periodStart} to ${periodEnd}, demonstrating exemplary professionalism and commitment throughout.`,
     "Actively contributed to software design, development, testing, and maintenance across multiple project cycles.",
     "Showcased initiative and creativity, independently managing responsibilities while collaborating effectively with the team.",
     "Consistently met sprint deadlines and quality benchmarks, earning commendation from mentors and team leads.",
@@ -237,7 +261,8 @@ const buildCertificatePDF = (app) => {
 };
 
 // ── Offer Letter PDF ──────────────────────────────────────────────────────────
-const buildOfferLetterPDF = (app) => {
+// dates = { issueDate, startDate, duration }  (issueDate/startDate are ISO yyyy-mm-dd, duration is free text e.g. "2 Months")
+const buildOfferLetterPDF = (app, dates) => {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const W = 210;
   const H = 297;
@@ -246,7 +271,9 @@ const buildOfferLetterPDF = (app) => {
   const CW = W - ML - MR;
   const FOOTER_Y = H - 14;
 
-  const issueDate = "15 May 2026";
+  const issueDate = formatDisplayDate(dates.issueDate);
+  const startDate = formatDisplayDate(dates.startDate);
+  const duration  = dates.duration || "—";
   const refNo = `LT/OL/${new Date().getFullYear()}/${String(app.id || "001").slice(-4).padStart(4, "0")}`;
 
   doc.setFillColor(22, 49, 120);
@@ -320,10 +347,10 @@ const buildOfferLetterPDF = (app) => {
     ["Position",     "Software Engineer Intern"],
     ["Department",   "Engineering & Product"],
     ["Reporting To", "Project Mentor / Team Lead"],
-    ["Duration",     "2 Months"],
+    ["Duration",     duration],
     ["Mode",         "Hybrid / As Mutually Discussed"],
     ["Stipend",      "As per internship policy"],
-    ["Start Date",   "1 June 2026"],
+    ["Start Date",   startDate],
   ];
   const TABLE_H = rows.length * ROW_H + 9;
 
@@ -529,6 +556,101 @@ const uploadAndSaveDocument = async (pdfBlob, _fileName, internId, documentType)
   return fileUrl;
 };
 
+// ── Date Modal ─────────────────────────────────────────────────────────────
+// type: "offer" | "certificate"
+// onConfirm(dates) where dates shape depends on type
+const DocumentDateModal = ({ type, applicantName, onCancel, onConfirm }) => {
+  const today = new Date().toISOString().split("T")[0];
+
+  // Offer letter fields
+  const [issueDate, setIssueDate] = useState(today);
+  const [startDate, setStartDate] = useState("");
+  const [duration, setDuration]   = useState("2 Months");
+
+  // Certificate fields
+  const [certIssueDate, setCertIssueDate] = useState(today);
+  const [periodStart, setPeriodStart]     = useState("");
+  const [periodEnd, setPeriodEnd]         = useState("");
+
+  const isOffer = type === "offer";
+  const computedDuration = !isOffer ? monthsBetween(periodStart, periodEnd) : "";
+
+  const canSubmit = isOffer
+    ? issueDate && startDate && duration.trim()
+    : certIssueDate && periodStart && periodEnd;
+
+  const handleSubmit = () => {
+    if (!canSubmit) return;
+    if (isOffer) {
+      onConfirm({ issueDate, startDate, duration: duration.trim() });
+    } else {
+      onConfirm({ issueDate: certIssueDate, startDate: periodStart, endDate: periodEnd });
+    }
+  };
+
+  return (
+    <div className="adm-modal-overlay" onClick={onCancel}>
+      <div className="adm-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="adm-modal-title">
+          {isOffer ? "Offer Letter — Dates" : "Certificate — Dates"}
+        </div>
+        <div className="adm-modal-sub">{applicantName}</div>
+
+        {isOffer ? (
+          <>
+            <div className="adm-modal-field">
+              <label>Issue Date</label>
+              <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
+            </div>
+            <div className="adm-modal-field">
+              <label>Internship Start Date</label>
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            </div>
+            <div className="adm-modal-field">
+              <label>Duration</label>
+              <input
+                type="text"
+                placeholder="e.g. 2 Months"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="adm-modal-field">
+              <label>Issue / Completion Date</label>
+              <input type="date" value={certIssueDate} onChange={(e) => setCertIssueDate(e.target.value)} />
+            </div>
+            <div className="adm-modal-field">
+              <label>Internship Period — Start</label>
+              <input type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} />
+            </div>
+            <div className="adm-modal-field">
+              <label>Internship Period — End</label>
+              <input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} />
+            </div>
+            {computedDuration && (
+              <div className="adm-modal-hint">Duration: {computedDuration}</div>
+            )}
+          </>
+        )}
+
+        <div className="adm-modal-actions">
+          <button className="adm-modal-btn adm-modal-cancel" onClick={onCancel}>Cancel</button>
+          <button
+            className="adm-modal-btn adm-modal-confirm"
+            disabled={!canSubmit}
+            onClick={handleSubmit}
+          >
+            Generate
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Component ─────────────────────────────────────────────────────────────────
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -542,6 +664,7 @@ const AdminDashboard = () => {
   const [sending, setSending] = useState(null);
   const [toast, setToast] = useState(null);
   const [documents, setDocuments] = useState([]);
+  const [dateModal, setDateModal] = useState(null); // "offer" | "certificate" | null
 
   const [totalVisitors, setTotalVisitors] = useState(0);
   const [uniqueVisitors, setUniqueVisitors] = useState(0);
@@ -625,11 +748,21 @@ const AdminDashboard = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleGenerateDocument = async (type) => {
+  // Step 1: user clicks "Generate Offer Letter" / "Generate Certificate" → open date modal
+  const openDateModal = (type) => {
     if (!selected) return;
+    setDateModal(type);
+  };
+
+  // Step 2: user fills dates in modal and confirms → actually build + save the PDF
+  const handleGenerateDocument = async (type, dates) => {
+    if (!selected) return;
+    setDateModal(null);
     setSending(`${selected.id}:${type}`);
     try {
-      const doc = type === "offer" ? buildOfferLetterPDF(selected) : buildCertificatePDF(selected);
+      const doc = type === "offer"
+        ? buildOfferLetterPDF(selected, dates)
+        : buildCertificatePDF(selected, dates);
       const labelMap = { offer: "Offer_Letter", certificate: "Certificate" };
       const downloadName = `${selected.name?.replace(/\s+/g, "_")}_${labelMap[type]}.pdf`;
       doc.save(`${Date.now()}_${downloadName}`);
@@ -960,6 +1093,58 @@ const AdminDashboard = () => {
         }
         @keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(12px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
 
+        /* ── Date Modal ── */
+        .adm-modal-overlay {
+          position: fixed; inset: 0; background: rgba(0,0,0,.8);
+          z-index: 300; display: flex; align-items: center; justify-content: center;
+          backdrop-filter: blur(4px); padding: 20px;
+        }
+        .adm-modal {
+          background: #0a0e14; border: 1px solid rgba(250,204,21,0.15);
+          border-radius: 14px; padding: 26px; width: 100%; max-width: 360px;
+          animation: modalIn .2s ease;
+        }
+        @keyframes modalIn { from{opacity:0;transform:scale(.96)} to{opacity:1;transform:scale(1)} }
+        .adm-modal-title {
+          font-size: 1.05rem; font-weight: 800; color: #fff; margin-bottom: 2px;
+        }
+        .adm-modal-sub {
+          font-size: 12px; font-family: 'JetBrains Mono', monospace;
+          color: rgba(255,255,255,0.3); margin-bottom: 18px;
+        }
+        .adm-modal-field { margin-bottom: 14px; }
+        .adm-modal-field label {
+          display: block; font-size: 11px; font-family: 'JetBrains Mono', monospace;
+          color: rgba(250,204,21,0.55); text-transform: uppercase; letter-spacing: .08em;
+          margin-bottom: 6px;
+        }
+        .adm-modal-field input {
+          width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 8px; padding: 9px 12px; color: #e2e8f0; font-size: 13px;
+          font-family: 'Syne', sans-serif; outline: none; transition: border-color 0.2s;
+          color-scheme: dark;
+        }
+        .adm-modal-field input:focus { border-color: rgba(250,204,21,0.4); }
+        .adm-modal-hint {
+          font-size: 11px; font-family: 'JetBrains Mono', monospace;
+          color: #39ff14; margin-bottom: 6px; margin-top: -4px;
+        }
+        .adm-modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .adm-modal-btn {
+          flex: 1; padding: 10px 14px; border-radius: 8px; font-size: 13px;
+          font-family: 'JetBrains Mono', monospace; font-weight: 700;
+          border: 1px solid transparent; cursor: pointer; transition: all 0.2s;
+        }
+        .adm-modal-cancel {
+          background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); color: #94a3b8;
+        }
+        .adm-modal-cancel:hover { color: #e2e8f0; border-color: rgba(255,255,255,0.2); }
+        .adm-modal-confirm {
+          background: rgba(250,204,21,0.12); border-color: rgba(250,204,21,0.35); color: #facc15;
+        }
+        .adm-modal-confirm:hover:not(:disabled) { background: rgba(250,204,21,0.2); border-color: #facc15; }
+        .adm-modal-confirm:disabled { opacity: .35; cursor: not-allowed; }
+
         /* ── Responsive ── */
         @media (max-width: 1024px) {
           .adm-stats { grid-template-columns: repeat(3,1fr); }
@@ -1261,7 +1446,7 @@ const AdminDashboard = () => {
                       className="adm-action-btn btn-offer"
                       style={{ flex: 1 }}
                       disabled={!!sending}
-                      onClick={() => handleGenerateDocument("offer")}
+                      onClick={() => openDateModal("offer")}
                     >
                       {sending === `${selected.id}:offer`
                         ? "Generating..."
@@ -1293,7 +1478,7 @@ const AdminDashboard = () => {
                       className="adm-action-btn btn-certificate"
                       style={{ flex: 1 }}
                       disabled={!!sending}
-                      onClick={() => handleGenerateDocument("certificate")}
+                      onClick={() => openDateModal("certificate")}
                     >
                       {sending === `${selected.id}:certificate`
                         ? "Generating..."
@@ -1324,6 +1509,16 @@ const AdminDashboard = () => {
           </>
         );
       })()}
+
+      {/* ── Date Modal ── */}
+      {dateModal && selected && (
+        <DocumentDateModal
+          type={dateModal}
+          applicantName={selected.name || "Applicant"}
+          onCancel={() => setDateModal(null)}
+          onConfirm={(dates) => handleGenerateDocument(dateModal, dates)}
+        />
+      )}
 
       {toast && <div className="adm-toast">{toast}</div>}
     </>
