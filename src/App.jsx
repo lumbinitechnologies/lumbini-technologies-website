@@ -37,6 +37,7 @@ const AdminDashboard = lazy(() => import("./Components/Admin/AdminDashboard"));
 const AnalyticsDashboard = lazy(() => import("./Components/Admin/AnalyticsDashboard"));
 const PrivacyPolicy = lazy(() => import("./Components/PrivacyPolicy/PrivacyPolicy"));
 const TermsAndConditions = lazy(() => import("./Components/TermsAndConditions/TermsAndConditions"));
+const CertificateVerification = lazy(() => import("./Components/CertificateVerification/CertificateVerification"));
 
 const Blogs = lazy(() => import("./Components/Blogs/Blogs"));
 const BlogDetails = lazy(() => import("./Components/Blogs/BlogDetails"));
@@ -204,6 +205,8 @@ const AnimatedRoutes = () => {
         <Route path="/ServicePage" element={<PageWrapper><ServicePage /></PageWrapper>} />
         <Route path="/Career" element={<PageWrapper><Career /></PageWrapper>} />
         <Route path="/Contact" element={<PageWrapper><Contact /></PageWrapper>} />
+        <Route path="/verify-certificate/:certificateId" element={<PageWrapper><CertificateVerification /></PageWrapper>} />
+        <Route path="/verify-certificate" element={<PageWrapper><CertificateVerification /></PageWrapper>} />
         <Route path="/Products" element={<PageWrapper><Products /></PageWrapper>} />
         <Route path="/Blogs" element={<PageWrapper><Blogs /></PageWrapper>} />
         <Route

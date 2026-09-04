@@ -835,6 +835,17 @@ const UserDashboard = () => {
                           <div className="ud-doc-icon">{meta.icon}</div>
                           <div className="ud-doc-label">{meta.label}</div>
                           <div className="ud-doc-date">{doc.created_at ? `issued ${fmt(doc.created_at)}` : "recently issued"}</div>
+                          {doc.document_type === "certificate" && doc.certificate_id && (
+                            <a
+                              href={`/verify-certificate/${encodeURIComponent(doc.certificate_id)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="ud-doc-date"
+                              style={{ color: "#facc15", textDecoration: "none" }}
+                            >
+                              verify {doc.certificate_id}
+                            </a>
+                          )}
                           <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="ud-doc-download">
                             ↗ VIEW & DOWNLOAD
                           </a>

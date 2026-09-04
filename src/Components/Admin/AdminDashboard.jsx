@@ -26,7 +26,7 @@ const monthsBetween = (startIso, endIso) => {
 
 // ── Certificate PDF ───────────────────────────────────────────────────────────
 // dates = { issueDate, startDate, endDate }  (all ISO yyyy-mm-dd, pre-formatted before building)
-const buildCertificatePDF = (app, dates) => {
+const buildCertificatePDF = (app, dates, certificateId) => {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const W       = 210;
   const H       = 297;
@@ -40,12 +40,15 @@ const buildCertificatePDF = (app, dates) => {
   const periodStart = formatDisplayDate(dates.startDate);
   const periodEnd   = formatDisplayDate(dates.endDate);
   const period      = `${periodStart} – ${periodEnd}`;
+  const duration    = monthsBetween(dates.startDate, dates.endDate) || "—";
 
-  const name      = app.name       || "Intern Name";
+  const name       = app.name       || "Intern Name";
   const university = app.university || "";
-  const degree     = app.degree     || "";
-  const role       = "Software Engineer Intern";
-  const refNo      = `LT/CA/2025/${String(app.id || "001").slice(-4).padStart(4, "0")}`;
+  const degree      = app.degree     || "";
+  const role        = "Software Engineer Intern";
+  const firstName   = name.split(" ")[0];
+
+  const refNo = certificateId || "PENDING";
 
   // ── Left accent bar + header band ────────────────────────────────────────
   doc.setFillColor(22, 49, 120);
@@ -63,9 +66,9 @@ const buildCertificatePDF = (app, dates) => {
   doc.text("www.lumbinitechnologies.com  ·  hr@lumbinitechnologies.com  ·  +91 9848294006", W / 2, 15.5, { align: "center" });
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor(220, 235, 255);
-  doc.text("CERTIFICATE OF APPRECIATION", W / 2, 21, { align: "center" });
+  doc.text("INTERNSHIP COMPLETION & APPRECIATION CERTIFICATE", W / 2, 21, { align: "center" });
 
   // ── Gold rule ─────────────────────────────────────────────────────────────
   doc.setDrawColor(218, 165, 32);
@@ -76,8 +79,8 @@ const buildCertificatePDF = (app, dates) => {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
-  doc.text(`Ref: ${refNo}`, ML, 31);
-  doc.text(`Date: ${issueDate}`, W - MR, 31, { align: "right" });
+  doc.text(`Certificate No.: ${refNo}`, ML, 31);
+  doc.text(`Date of Issue: ${issueDate}`, W - MR, 31, { align: "right" });
 
   // ── Recipient block ───────────────────────────────────────────────────────
   let y = 39;
@@ -97,7 +100,7 @@ const buildCertificatePDF = (app, dates) => {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9.5);
   doc.setTextColor(22, 49, 120);
-  const subject = `Subject: Certificate of Appreciation — ${role}`;
+  const subject = `Subject: Internship Completion & Appreciation Certificate — ${role}`;
   doc.text(subject, ML, y);
   doc.setDrawColor(22, 49, 120);
   doc.setLineWidth(0.3);
@@ -113,9 +116,8 @@ const buildCertificatePDF = (app, dates) => {
 
   // ── Intro paragraph ───────────────────────────────────────────────────────
   const para0 =
-    `We are delighted to present this Certificate of Appreciation to ${name} in recognition of the ` +
-    `dedication, hard work, and valuable contributions made during the internship programme at ` +
-    `Lumbini Technologies Private Limited from ${periodStart} to ${periodEnd}.`;
+    `This is to certify that ${name} has successfully completed the internship programme as a ${role} ` +
+    `with Lumbini Technologies Private Limited, from ${periodStart} to ${periodEnd}.`;
   doc.setFontSize(9.5);
   doc.splitTextToSize(para0, CW).forEach((l) => { doc.text(l, ML, y); y += 4.8; });
   y += 5;
@@ -127,9 +129,9 @@ const buildCertificatePDF = (app, dates) => {
     ["Position",          role],
     ["Department",        "Engineering & Product"],
     ["Reporting To",      "Project Mentor / Team Lead"],
-    ["Internship Period",  period],
-    ["Mode",              "Hybrid / As Mutually Discussed"],
-    ["Completion Date",   issueDate],
+    ["Internship Period", period],
+    ["Duration",          duration],
+    ["Date of Completion", periodEnd],
   ];
   const TABLE_H = rows.length * ROW_H + 8;
 
@@ -182,11 +184,11 @@ const buildCertificatePDF = (app, dates) => {
   y += 7;
 
   const highlights = [
-    `${name} served as a ${role} from ${periodStart} to ${periodEnd}, demonstrating exemplary professionalism and commitment throughout.`,
-    "Actively contributed to software design, development, testing, and maintenance across multiple project cycles.",
-    "Showcased initiative and creativity, independently managing responsibilities while collaborating effectively with the team.",
-    "Consistently met sprint deadlines and quality benchmarks, earning commendation from mentors and team leads.",
-    "Upheld complete confidentiality of proprietary information and the highest standards of professional conduct.",
+    `Contributed to the design, development, testing, and maintenance of production software modules across multiple project cycles as a ${role}.`,
+    "Developed and integrated software features using modern engineering practices and tools.",
+    "Participated in debugging, code reviews, and deployment activities alongside the engineering team.",
+    "Collaborated with cross-functional team members using Agile/Scrum practices and sprint-based development.",
+    "Demonstrated strong ownership, problem-solving ability, and commitment to meeting project requirements and deadlines.",
   ];
 
   doc.setFont("helvetica", "normal");
@@ -204,8 +206,9 @@ const buildCertificatePDF = (app, dates) => {
   doc.setFontSize(9.5);
   doc.setTextColor(20, 20, 20);
   const closing =
-    `The management and entire team at Lumbini Technologies Pvt. Ltd. sincerely appreciate the effort and ` +
-    `enthusiasm ${name} brought to this programme. We extend our heartfelt best wishes for a bright and successful career ahead.`;
+    `The management and team at Lumbini Technologies Pvt. Ltd. sincerely appreciate ${name}'s dedication, ` +
+    `professionalism, and valuable contributions throughout the internship. We wish ${firstName} continued success ` +
+    `in the journey ahead.`;
   doc.splitTextToSize(closing, CW).forEach((l) => { doc.text(l, ML, y); y += 4.8; });
   y += 7;
 
@@ -230,6 +233,25 @@ const buildCertificatePDF = (app, dates) => {
   doc.text("CEO & Talent Acquisition", ML, y);
   y += 4.5;
   doc.text("Lumbini Technologies Pvt. Ltd.", ML, y);
+
+  // ── Public verification link ─────────────────────────────────────────────
+  if (certificateId) {
+    const verificationUrl = `https://www.lumbinitechnologies.com/verify-certificate/${encodeURIComponent(certificateId)}`;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    doc.setTextColor(22, 49, 120);
+    const verificationText = `Verify online: ${verificationUrl}`;
+    const verificationX = W / 2;
+    const verificationY = FOOTER_Y - 4;
+    doc.text(verificationText, verificationX, verificationY, { align: "center" });
+    doc.link(
+      verificationX - doc.getTextWidth(verificationText) / 2,
+      verificationY - 4,
+      doc.getTextWidth(verificationText),
+      5,
+      { url: verificationUrl }
+    );
+  }
 
   // ── Footer band ───────────────────────────────────────────────────────────
   doc.setFillColor(13, 32, 96);
@@ -534,7 +556,7 @@ const getExistingInternId = async (applicationId) => {
   return data?.id ?? null;
 };
 
-const uploadAndSaveDocument = async (pdfBlob, _fileName, internId, documentType) => {
+const uploadAndSaveDocument = async (pdfBlob, _fileName, internId, documentType, certificateId = null) => {
   const fixedFileName = documentType === "offer_letter" ? "offer_letter.pdf" : "certificate.pdf";
   const path = `${internId}/${documentType}/${fixedFileName}`;
 
@@ -548,11 +570,13 @@ const uploadAndSaveDocument = async (pdfBlob, _fileName, internId, documentType)
   const { data: urlData } = supabase.storage.from("documents").getPublicUrl(path);
   const fileUrl = urlData?.publicUrl;
 
-  await supabase.from("documents").upsert({
+  const { error: documentError } = await supabase.from("documents").upsert({
     intern_id: internId,
     document_type: documentType,
     file_url: fileUrl,
-  });
+    certificate_id: certificateId,
+  }, { onConflict: "intern_id,document_type" });
+  if (documentError) throw new Error("Could not save document record: " + documentError.message);
   return fileUrl;
 };
 
@@ -760,21 +784,41 @@ const AdminDashboard = () => {
     setDateModal(null);
     setSending(`${selected.id}:${type}`);
     try {
+      const internId = await getExistingInternId(selected.id);
+      if (!internId) {
+        showToast(`${type === "offer" ? "Offer Letter" : "Certificate"} cannot be saved until the applicant is selected.`);
+        return;
+      }
+
+      let certificate = null;
+      if (type === "certificate") {
+        const { data, error } = await supabase.rpc("issue_certificate", {
+          p_intern_id: internId,
+          p_issue_date: dates.issueDate,
+          p_period_start: dates.startDate,
+          p_period_end: dates.endDate,
+        });
+        if (error) throw new Error("Could not issue certificate: " + error.message);
+        certificate = data?.[0];
+        if (!certificate?.certificate_id) throw new Error("Certificate number was not issued.");
+      }
+
       const doc = type === "offer"
         ? buildOfferLetterPDF(selected, dates)
-        : buildCertificatePDF(selected, dates);
+        : buildCertificatePDF(selected, dates, certificate.certificate_id);
       const labelMap = { offer: "Offer_Letter", certificate: "Certificate" };
       const downloadName = `${selected.name?.replace(/\s+/g, "_")}_${labelMap[type]}.pdf`;
       doc.save(`${Date.now()}_${downloadName}`);
       try {
-        const internId = await getExistingInternId(selected.id);
-        if (!internId) {
-          showToast(`${labelMap[type].replace("_", " ")} downloaded ✓ (not saved — applicant not selected)`);
-          return;
-        }
         const pdfBlob = doc.output("blob");
         const docTypeMap = { offer: "offer_letter", certificate: "certificate" };
-        await uploadAndSaveDocument(pdfBlob, downloadName, internId, docTypeMap[type]);
+        await uploadAndSaveDocument(
+          pdfBlob,
+          downloadName,
+          internId,
+          docTypeMap[type],
+          certificate?.certificate_id || null
+        );
         const { data: freshDocs } = await supabase.from("documents").select("*").eq("intern_id", internId);
         setDocuments(freshDocs || []);
         showToast(`${labelMap[type].replace("_", " ")} downloaded & saved ✓`);
