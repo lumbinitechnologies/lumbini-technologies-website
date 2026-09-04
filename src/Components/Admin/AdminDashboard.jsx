@@ -94,14 +94,14 @@ const buildCertificatePDF = (app, dates, certificateId) => {
   doc.setTextColor(80, 80, 80);
   if (university) { doc.text(university, ML, y); y += 4; }
   if (degree)     { doc.text(degree,     ML, y); y += 4; }
-  y += 4;
+  y += 7;
 
   // ── Intro paragraph ───────────────────────────────────────────────────────
   const para0 =
     `This is to certify that ${name} has successfully completed the internship programme as a ${role} ` +
     `with Lumbini Technologies Private Limited, from ${periodStart} to ${periodEnd}.`;
-  doc.setFontSize(9.5);
-  doc.splitTextToSize(para0, CW).forEach((l) => { doc.text(l, ML, y); y += 4.8; });
+  doc.setFontSize(10);
+  doc.splitTextToSize(para0, CW).forEach((l) => { doc.text(l, ML, y); y += 5.2; });
   y += 5;
 
   // ── Internship details table ───────────────────────────────────────────────
