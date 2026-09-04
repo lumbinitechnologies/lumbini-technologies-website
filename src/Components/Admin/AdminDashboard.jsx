@@ -96,17 +96,6 @@ const buildCertificatePDF = (app, dates, certificateId) => {
   if (degree)     { doc.text(degree,     ML, y); y += 4; }
   y += 4;
 
-  // ── Subject line ──────────────────────────────────────────────────────────
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9.5);
-  doc.setTextColor(22, 49, 120);
-  const subject = `Subject: Internship Completion & Appreciation Certificate — ${role}`;
-  doc.text(subject, ML, y);
-  doc.setDrawColor(22, 49, 120);
-  doc.setLineWidth(0.3);
-  doc.line(ML, y + 1, ML + doc.getTextWidth(subject), y + 1);
-  y += 6.5;
-
   // ── Intro paragraph ───────────────────────────────────────────────────────
   const para0 =
     `This is to certify that ${name} has successfully completed the internship programme as a ${role} ` +
