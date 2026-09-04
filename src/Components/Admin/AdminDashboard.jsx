@@ -107,13 +107,6 @@ const buildCertificatePDF = (app, dates, certificateId) => {
   doc.line(ML, y + 1, ML + doc.getTextWidth(subject), y + 1);
   y += 6.5;
 
-  // ── Salutation ────────────────────────────────────────────────────────────
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9.5);
-  doc.setTextColor(20, 20, 20);
-  doc.text(`Dear ${name},`, ML, y);
-  y += 6;
-
   // ── Intro paragraph ───────────────────────────────────────────────────────
   const para0 =
     `This is to certify that ${name} has successfully completed the internship programme as a ${role} ` +
