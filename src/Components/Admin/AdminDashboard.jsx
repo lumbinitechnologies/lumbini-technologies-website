@@ -182,7 +182,7 @@ const buildCertificatePDF = (app, dates, certificateId) => {
     wrapped.forEach((line, li) => { doc.text(line, ML + 5, y + li * 4.8); });
     y += wrapped.length * 4.8 + 2;
   });
-  y += 1;
+  y += 3;
 
   // ── Closing paragraph ─────────────────────────────────────────────────────
   doc.setFontSize(9.5);
